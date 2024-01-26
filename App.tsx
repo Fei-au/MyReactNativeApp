@@ -9,7 +9,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Login from './src/screens/auth/login';
-import Home from './src/screens/import/home';
+import Home from './src/screens/';
 import { useColorScheme } from 'react-native';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 
@@ -27,7 +27,7 @@ function App(): React.JSX.Element {
         />
         <Stack.Screen name="Home"
           component={Home}
-          options={{title: 'Welcome'}}
+          options={{title: 'Start Scan'}}
         />
       </Stack.Navigator>
     </NavigationContainer>

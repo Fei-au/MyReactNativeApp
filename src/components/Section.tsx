@@ -13,7 +13,7 @@ function Section({children, title, isCenter, narrow}: SectionProps): React.JSX.E
   return (
     <View style={[styles.sectionContainer, isCenter && styles.sectionCenter]}>
       <View style={[styles.innerView, narrow && styles.narrowView]}>
-        <Text
+        {title ? <Text
           style={[
             styles.sectionTitle,
             {
@@ -21,7 +21,7 @@ function Section({children, title, isCenter, narrow}: SectionProps): React.JSX.E
             },
           ]}>
           {title}
-        </Text>
+        </Text> : null}
         {children ? <Text
           style={[
             styles.sectionDescription,
