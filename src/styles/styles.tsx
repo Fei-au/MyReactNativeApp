@@ -17,5 +17,5 @@ export const commonStyles = StyleSheet.create({
     link: {
         color: '#0386D0',
         textDecorationLine: 'underline',
-    }
+    },
 });

@@ -4,7 +4,8 @@ import {
   useColorScheme,
 } from 'react-native';
 
-import { Icon, TabBar } from '@ant-design/react-native';
+import { TabBar } from '@ant-design/react-native';
+import Icon from 'react-native-vector-icons/AntDesign';
 import {
   Colors,
 } from 'react-native/Libraries/NewAppScreen';
@@ -40,13 +41,13 @@ function BottomMenu(props: homeProps): React.JSX.Element {
             tintColor="#33A3F4">
         <TabBar.Item
             title="Scan"
-            icon={<Icon name="scan" />}
+            icon={<Icon name="scan1" />}
             selected={selectedTab === 'scan'}
             onPress={() => onChangeTab('scan')}>
             <Scan/>
         </TabBar.Item>
         <TabBar.Item
-            icon={<Icon name="database" />}
+            icon={<Icon name="dashboard" />}
             title="Dashboard"
             selected={selectedTab === 'dashboard'}
             onPress={() => onChangeTab('dashboard')}>

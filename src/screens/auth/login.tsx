@@ -22,7 +22,8 @@ import {
 	Alert,
 } from 'react-native';
 
-import { Checkbox, Icon, Tabs, Toast } from '@ant-design/react-native';
+import { Checkbox, Tabs, Toast } from '@ant-design/react-native';
+import Icon from 'react-native-vector-icons/AntDesign';
 import {
   Colors,
 } from 'react-native/Libraries/NewAppScreen';

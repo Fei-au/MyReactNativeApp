@@ -12,12 +12,15 @@ import Login from './src/screens/auth/login';
 import Home from './src/screens/';
 import { useColorScheme } from 'react-native';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
+import { NativeBaseProvider} from "native-base";
 
 const Stack = createNativeStackNavigator();
 
 function App(): React.JSX.Element {
 
   return (
+    <NativeBaseProvider>
+
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen
@@ -31,6 +34,8 @@ function App(): React.JSX.Element {
         />
       </Stack.Navigator>
     </NavigationContainer>
+    </NativeBaseProvider>
+
   );
 }
 
