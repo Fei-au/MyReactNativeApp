@@ -12,16 +12,17 @@
   "dependencies": {
     "@ant-design/icons-react-native": "^2.3.2",
     "@ant-design/react-native": "^5.0.5",
+    "@react-native-community/hooks": "^3.0.0",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
     "native-base": "^3.4.28",
     "react": "18.2.0",
     "react-native": "0.73.2",
-    "react-native-camera": "^4.2.1",
     "react-native-safe-area-context": "^3.3.2",
     "react-native-screens": "^3.29.0",
     "react-native-svg": "^12.5.1",
-    "react-native-vector-icons": "^10.0.3"
+    "react-native-vector-icons": "^10.0.3",
+    "react-native-vision-camera": "^3.8.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

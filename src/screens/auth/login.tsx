@@ -29,6 +29,8 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 import Section from '../../components/Section';
 import { commonStyles } from '../../styles/styles';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Routes } from '../../Routes';
 
 
 type tabType = {title : string};
@@ -37,6 +39,8 @@ const tabs: tabType[] = [
 	{title: 'Login'},
 	{title: 'Register'},
 ];
+
+type Props = NativeStackScreenProps<Routes, 'PermissionsPage'>
 
 function Login({navigation}): React.JSX.Element {
 	

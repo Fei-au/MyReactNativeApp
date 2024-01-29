@@ -1,22 +1,32 @@
-import { useIsFocused } from '@react-navigation/core';
-import { Text } from 'react-native';
-import { RNCamera } from 'react-native-camera';
+import { useAppState } from "@react-native-community/hooks";
+import { useIsFocused } from "@react-navigation/native";
+import { View } from "native-base";
+import React, { useRef } from "react";
+import { StyleSheet } from "react-native";
+import { Text } from "react-native-svg";
+import { Camera, useCameraDevice } from "react-native-vision-camera"
 
 
-interface ComponentProps {
-    hasCameraPermission: boolean; // Optional prop
+function App() {
+  return <View><Text>No Camera Device Permission</Text></View>
+
+
+  // const camera = useRef<Camera>(null)
+  // const device = useCameraDevice('back')
+  // const isFocused = useIsFocused()
+  // const appState = useAppState()
+  // const isActive = isFocused && appState === "active"
+  
+  // if (device == null) return <View><Text>No Camera Device Permission</Text></View>
+  // return (
+  //   <Camera
+  //     ref={camera}
+  //     style={StyleSheet.absoluteFill}
+  //     device={device}
+  //     isActive={isActive}
+  //     photo={true}
+  //   />
+  // )
 }
 
-export const Component: React.FC<ComponentProps> = (props) => {
-  const isFocused = useIsFocused();
-    const {hasCameraPermission} = props;
-  // ...
-
-  if (hasCameraPermission === false) {
-    return <Text>No access to camera</Text>;
-  } else if (hasCameraPermission !== null && isFocused) {
-    return <RNCamera />;
-  } else {
-    return null;
-  }
-}
+export default App;
