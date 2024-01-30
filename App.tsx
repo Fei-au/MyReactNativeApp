@@ -13,6 +13,8 @@ import Home from './src/screens/';
 import PermissionsPage from './src/screens/auth/PermissionsPage'
 import { NativeBaseProvider} from "native-base";
 import { Camera } from 'react-native-vision-camera';
+import { CodeScannerPage } from './src/screens/import/CodeScannerPage'; 
+import { CameraPage } from './src/screens/import/CameraPage';
 
 const Stack = createNativeStackNavigator();
 
@@ -39,6 +41,11 @@ function App(): React.JSX.Element {
             component={Home}
             options={{title: 'Start Scan'}}
           />
+          <Stack.Screen name="CodeScannerPage"
+            component={CodeScannerPage}
+            options={{title: 'Start Scan'}}
+          />
+          <Stack.Screen name="CameraPage" component={CameraPage} />
         </Stack.Navigator>
       </NavigationContainer>
     </NativeBaseProvider>

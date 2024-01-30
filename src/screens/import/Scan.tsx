@@ -1,5 +1,4 @@
 import { ImagePicker, Toast } from '@ant-design/react-native';
-import Icon from 'react-native-vector-icons/AntDesign';
 import React, { useEffect, useState } from 'react';
 import {
   Button,
@@ -7,6 +6,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   useColorScheme,
   View,
 } from 'react-native';
@@ -15,12 +15,13 @@ import {
   Colors,
 } from 'react-native/Libraries/NewAppScreen';
 import { Select, useToast } from 'native-base';
+import AntIcon from 'react-native-vector-icons/AntDesign';
+import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { commonStyles } from '../../styles/styles';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Routes } from '../../Routes';
 
-import Scanner from '../../components/Scanner';
-
-interface BarcodeParam {
-  barcodes: string,
-}
 
 interface CaseNumParam {
   caseNumText: string
@@ -31,9 +32,12 @@ interface SelectDataInterface {
   value: string,
 }
 
+// type Props = NativeStackScreenProps<Routes, 'CodeScannerPage'>
+
 function Scan(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   // Code, url used before scraping
+  const navigation = useNavigation();
   const toast = useToast();
 
   const [code, setCode] = useState('');
@@ -83,12 +87,17 @@ function Scan(): React.JSX.Element {
     setIsManulInput(false);
   }, [])
 
-  const getBarcode = ({ barcodes }: BarcodeParam)=>{
-    if(!barcodes){
+  const handleScan = ()=>{
+    navigation.navigate('CodeScannerPage', {getBarCode: getBarCode});
+  }
+
+  const getBarCode = (barcodes: string[])=>{
+    if(barcodes.length === 0){
       setIsCodeReadOnly(false);
+    }else{
+      setCode(barcodes[0]);
 
     }
-    console.log('barcodes', barcodes);
   }
 
   const handleCodeOnBlur = async()=>{
@@ -142,7 +151,7 @@ function Scan(): React.JSX.Element {
   }
 
   const onAddImageClick = ()=>{
-    
+    navigation.navigate('CameraPage');
   }
 
   const handleSubmit = ()=>{
@@ -153,8 +162,10 @@ function Scan(): React.JSX.Element {
   return (
     <ScrollView style={[{backgroundColor: backgroundStyle.backgroundColor}, styles.scrollViewStyle]}>
       {/* Scan button container */}
-      
-      <Scanner />
+      <TouchableOpacity style={commonStyles.center} onPress={handleScan}>
+        <MaterialIcon name='barcode-scan' size={50}/>
+        <Text>Scan</Text>
+      </TouchableOpacity>
       <View style={{height: 20}}/>
       {!hasScraped ? 
       <>
@@ -252,7 +263,7 @@ function Scan(): React.JSX.Element {
         </View>
         <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Status</Text>
-          <Select selectedValue={status} minWidth="200" accessibilityLabel="Choose Status" placeholder="Choose Status" _selectedItem={{bg: "teal.600", endIcon: <Icon name='check' size={5} />}} mt={1} onValueChange={setStatus}>
+          <Select selectedValue={status} minWidth="200" accessibilityLabel="Choose Status" placeholder="Choose Status" _selectedItem={{bg: "teal.600", endIcon: <AntIcon name='check' size={5} />}} mt={1} onValueChange={setStatus}>
             {statusData.map((item)=><Select.Item label={item.label} value={item.value} />)}
           </Select>
         </View>
@@ -266,7 +277,7 @@ function Scan(): React.JSX.Element {
         </View> : null}
         <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Classification</Text>
-          <Select isDisabled={isClassDisable} selectedValue={classification} minWidth="200" accessibilityLabel="Choose Class" placeholder="Choose Class" _selectedItem={{bg: "teal.600", endIcon: <Icon name='check' size={5} />}} mt={1} onValueChange={setClassification}>
+          <Select isDisabled={isClassDisable} selectedValue={classification} minWidth="200" accessibilityLabel="Choose Class" placeholder="Choose Class" _selectedItem={{bg: "teal.600", endIcon: <AntIcon name='check' size={5} />}} mt={1} onValueChange={setClassification}>
             {classificationData.map((item)=><Select.Item label={item.label} value={item.value} />)}
           </Select>
           {classification === 'Add New' && <TextInput
@@ -277,7 +288,7 @@ function Scan(): React.JSX.Element {
         </View>
         <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Size</Text>
-          <Select isDisabled={isSizeDisable} selectedValue={size} minWidth="200" accessibilityLabel="Choose Size" placeholder="Choose Size" _selectedItem={{bg: "teal.600", endIcon: <Icon name='check' size={5} />}} mt={1} onValueChange={setSize}>
+          <Select isDisabled={isSizeDisable} selectedValue={size} minWidth="200" accessibilityLabel="Choose Size" placeholder="Choose Size" _selectedItem={{bg: "teal.600", endIcon: <AntIcon name='check' size={5} />}} mt={1} onValueChange={setSize}>
             {sizeData.map((item)=><Select.Item label={item.label} value={item.value} />)}
           </Select>
           {size === 'Add New' && <TextInput
@@ -288,7 +299,7 @@ function Scan(): React.JSX.Element {
         </View>
         <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Color</Text>
-          <Select isDisabled={isColorDisable} selectedValue={color} minWidth="200" accessibilityLabel="Choose Size" placeholder="Choose Color" _selectedItem={{bg: "teal.600", endIcon: <Icon name='check' size={5} />}} mt={1} onValueChange={setColor}>
+          <Select isDisabled={isColorDisable} selectedValue={color} minWidth="200" accessibilityLabel="Choose Size" placeholder="Choose Color" _selectedItem={{bg: "teal.600", endIcon: <AntIcon name='check' size={5} />}} mt={1} onValueChange={setColor}>
             {colorData.map((item)=><Select.Item label={item.label} value={item.value} />)}
           </Select>
           {color === 'Add New' && <TextInput

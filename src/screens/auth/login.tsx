@@ -42,7 +42,7 @@ const tabs: tabType[] = [
 
 type Props = NativeStackScreenProps<Routes, 'PermissionsPage'>
 
-function Login({navigation}): React.JSX.Element {
+function Login({navigation}: any): React.JSX.Element {
 	
   const isDarkMode = useColorScheme() === 'dark';
 	const [page, setPage] = useState<string>('Login');
@@ -50,7 +50,7 @@ function Login({navigation}): React.JSX.Element {
 	const [password, setPassword] = useState('');
 	const [showPassword, setShowPassword] = useState(true);
 	const [remPsw, setRemPsw] = useState(true);
-  const backgroundStyle = {
+  	const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
