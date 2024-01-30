@@ -1,7 +1,10 @@
 import { ImagePicker, Toast } from '@ant-design/react-native';
 import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   Button,
+  PermissionsAndroid,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,6 +24,7 @@ import { commonStyles } from '../../styles/styles';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Routes } from '../../Routes';
+import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 
 
 interface CaseNumParam {
@@ -33,6 +37,27 @@ interface SelectDataInterface {
 }
 
 // type Props = NativeStackScreenProps<Routes, 'CodeScannerPage'>
+
+const requestSavePermission = async (): Promise<boolean> => {
+  if (Platform.OS !== 'android') return true
+  const permission = PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
+  console.log('permission', permission)
+  if (permission == null) return false
+  let hasPermission = await PermissionsAndroid.check(permission)
+  console.log('here', hasPermission);
+  if (!hasPermission) {
+    const permissionRequestResult = await PermissionsAndroid.request(permission,{
+      title: "External Storage Write Permission",
+      message: "We needs access to your external storage to store the photo.",
+      buttonNeutral: "Ask Me Later",
+      buttonNegative: "Cancel",
+      buttonPositive: "OK"
+    })
+    console.log('here2', permissionRequestResult);
+    hasPermission = permissionRequestResult === 'granted'
+  }
+  return hasPermission
+}
 
 function Scan(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -109,8 +134,7 @@ function Scan(): React.JSX.Element {
       setUrl('value');
     }else{
       toast.show({
-        title: 'No relative website found, please input item information manully',
-        placement: 'top'
+        description: 'No relative website found, please input item information manully',
       })
       setTimeout(() => {
         setHasScraped(true);
@@ -136,8 +160,7 @@ function Scan(): React.JSX.Element {
     // Set information
     if(!info){
       toast.show({
-        title: 'Nothing scraped, please input item information manully',
-        placement: 'top',
+        description: 'Nothing scraped, please input item information manully',
       })
       setTimeout(() => {
         setIsManulInput(true);
@@ -151,9 +174,35 @@ function Scan(): React.JSX.Element {
   }
 
   const onAddImageClick = ()=>{
-    navigation.navigate('CameraPage');
+    if(pics.length >= 10){
+      toast.show({description: 'Reach maximum photo limit 10, please remove other photos first!'});
+      return;
+    }
+    navigation.navigate('CameraPage', {afterTakenPhoto: afterTakenPhoto});
   }
 
+  const afterTakenPhoto = async(photo)=>{
+    const {path} = photo;
+    const type = 'photo';
+    try {
+      const hasPermission = await requestSavePermission()
+      if (!hasPermission) {
+        Alert.alert('Permission denied!', 'Vision Camera does not have permission to save the media to your camera roll.')
+        return
+      }
+      const newPath = await CameraRoll.save(`file://${path}`, {
+        type: type,
+      })
+      setPics([...pics, {
+        url: newPath,
+        id: Math.random(),
+      }])
+    } catch (e) {
+      const message = e instanceof Error ? e.message : JSON.stringify(e)
+      Alert.alert('Failed to save!', `An unexpected error occured while trying to save your photo. ${message}`)
+    }
+
+  }
   const handleSubmit = ()=>{
     console.log('submit')
   }

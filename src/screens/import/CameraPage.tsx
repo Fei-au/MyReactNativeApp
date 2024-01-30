@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useRef, useState, useCallback, useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
-import { PinchGestureHandler, PinchGestureHandlerGestureEvent, TapGestureHandler } from 'react-native-gesture-handler'
+import { GestureHandlerRootView, PinchGestureHandler, PinchGestureHandlerGestureEvent, TapGestureHandler } from 'react-native-gesture-handler'
 import { CameraRuntimeError, PhotoFile, useCameraDevice, useCameraFormat, useFrameProcessor, VideoFile } from 'react-native-vision-camera'
 import { Camera } from 'react-native-vision-camera'
 import { CONTENT_SPACING, CONTROL_BUTTON_SIZE, MAX_ZOOM_FACTOR, SAFE_AREA_PADDING, SCREEN_HEIGHT, SCREEN_WIDTH } from '../../Constants'
@@ -25,8 +25,9 @@ Reanimated.addWhitelistedNativeProps({
 const SCALE_FULL_ZOOM = 3
 
 type Props = NativeStackScreenProps<Routes, 'CameraPage'>
-export function CameraPage({ navigation }: any): React.ReactElement {
+export function CameraPage({ navigation, route }: any): React.ReactElement {
   const camera = useRef<Camera>(null)
+  const {afterTakenPhoto} = route.params;
   const [isCameraInitialized, setIsCameraInitialized] = useState(false)
   const hasMicrophonePermission = useMemo(() => Camera.getMicrophonePermissionStatus() === 'granted', [])
   const zoom = useSharedValue(0)
@@ -37,14 +38,13 @@ export function CameraPage({ navigation }: any): React.ReactElement {
   const isForeground = useIsForeground()
   const isActive = isFocussed && isForeground
 
+  const [cameraPosition, setCameraPosition] = useState<'front' | 'back'>('back')
   const [enableHdr, setEnableHdr] = useState(false)
   const [flash, setFlash] = useState<'off' | 'on'>('off')
   const [enableNightMode, setEnableNightMode] = useState(false)
 
   // camera device settings
-  const device = useCameraDevice('back')
-
-
+  let device = useCameraDevice('back')
 
   const [targetFps, setTargetFps] = useState(60)
 
@@ -89,15 +89,16 @@ export function CameraPage({ navigation }: any): React.ReactElement {
   const onError = useCallback((error: CameraRuntimeError) => {
     console.error(error)
   }, [])
-
   const onInitialized = useCallback(() => {
     console.log('Camera initialized!')
     setIsCameraInitialized(true)
   }, [])
-
   const onMediaCaptured = useCallback(
     (media: PhotoFile | VideoFile, type: 'photo' | 'video') => {
       console.log(`Media captured! ${JSON.stringify(media)}`)
+
+      afterTakenPhoto(media)
+      navigation.goBack();
     //   navigation.navigate('MediaPage', {
     //     path: media.path,
     //     type: type,
@@ -105,10 +106,18 @@ export function CameraPage({ navigation }: any): React.ReactElement {
     },
     [navigation],
   )
-
+  const onFlipCameraPressed = useCallback(() => {
+    setCameraPosition((p) => (p === 'back' ? 'front' : 'back'))
+  }, [])
   const onFlashPressed = useCallback(() => {
     setFlash((f) => (f === 'off' ? 'on' : 'off'))
   }, [])
+  //#endregion
+
+  //#region Tap Gesture
+  const onDoubleTap = useCallback(() => {
+    onFlipCameraPressed()
+  }, [onFlipCameraPressed])
   //#endregion
 
   //#region Effects
@@ -143,36 +152,46 @@ export function CameraPage({ navigation }: any): React.ReactElement {
     console.log(`Camera: ${device?.name} | Format: ${f}`)
   }, [device?.name, format, fps])
 
+  const frameProcessor = useFrameProcessor((frame) => {
+    'worklet'
 
+    console.log(`${frame.timestamp}: ${frame.width}x${frame.height} ${frame.pixelFormat} Frame (${frame.orientation})`)
+
+  }, [])
 
   return (
     <View style={styles.container}>
       {device != null && (
-        <PinchGestureHandler onGestureEvent={onPinchGesture} enabled={isActive}>
-          <Reanimated.View style={StyleSheet.absoluteFill}>
-            <TapGestureHandler numberOfTaps={2}>
-              <ReanimatedCamera
-                ref={camera}
-                style={StyleSheet.absoluteFill}
-                device={device}
-                format={format}
-                fps={fps}
-                photoHdr={enableHdr}
-                videoHdr={enableHdr}
-                lowLightBoost={device.supportsLowLightBoost && enableNightMode}
-                isActive={isActive}
-                onInitialized={onInitialized}
-                onError={onError}
-                enableZoomGesture={false}
-                animatedProps={cameraAnimatedProps}
-                exposure={0}
-                enableFpsGraph={true}
-                orientation="portrait"
-                photo={true}
-              />
-            </TapGestureHandler>
-          </Reanimated.View>
-        </PinchGestureHandler>
+        <GestureHandlerRootView style={[{ flex: 1} ,StyleSheet.absoluteFill] }>
+            <PinchGestureHandler onGestureEvent={onPinchGesture} enabled={isActive}>
+            <Reanimated.View style={StyleSheet.absoluteFill}>
+                <TapGestureHandler  numberOfTaps={2}>
+                <ReanimatedCamera
+                    ref={camera}
+                    style={StyleSheet.absoluteFill}
+                    device={device}
+                    format={format}
+                    fps={fps}
+                    photoHdr={enableHdr}
+                    videoHdr={enableHdr}
+                    lowLightBoost={device.supportsLowLightBoost && enableNightMode}
+                    isActive={isActive}
+                    onInitialized={onInitialized}
+                    onError={onError}
+                    enableZoomGesture={false}
+                    animatedProps={cameraAnimatedProps}
+                    exposure={0}
+                    enableFpsGraph={true}
+                    orientation="portrait"
+                    photo={true}
+                    video={true}
+                    audio={hasMicrophonePermission}
+                    frameProcessor={frameProcessor}
+                />
+                </TapGestureHandler>
+            </Reanimated.View>
+            </PinchGestureHandler>
+        </GestureHandlerRootView>
       )}
 
       <CaptureButton
@@ -198,27 +217,27 @@ export function CameraPage({ navigation }: any): React.ReactElement {
             <IonIcon name={flash === 'on' ? 'flash' : 'flash-off'} color="white" size={24} />
           </PressableOpacity>
         )}
-        {supports60Fps && (
+        {/* {supports60Fps && (
           <PressableOpacity style={styles.button} onPress={() => setTargetFps((t) => (t === 30 ? 60 : 30))}>
             <Text style={styles.text}>{`${targetFps}\nFPS`}</Text>
           </PressableOpacity>
-        )}
-        {supportsHdr && (
+        )} */}
+        {/* {supportsHdr && (
           <PressableOpacity style={styles.button} onPress={() => setEnableHdr((h) => !h)}>
             <MaterialIcon name={enableHdr ? 'hdr' : 'hdr-off'} color="white" size={24} />
           </PressableOpacity>
-        )}
-        {canToggleNightMode && (
+        )} */}
+        {/* {canToggleNightMode && (
           <PressableOpacity style={styles.button} onPress={() => setEnableNightMode(!enableNightMode)} disabledOpacity={0.4}>
             <IonIcon name={enableNightMode ? 'moon' : 'moon-outline'} color="white" size={24} />
           </PressableOpacity>
-        )}
-        <PressableOpacity style={styles.button} >
+        )} */}
+        {/* <PressableOpacity style={styles.button} onPress={() => console.log('heeeer')}>
           <IonIcon name="settings-outline" color="white" size={24} />
-        </PressableOpacity>
-        <PressableOpacity style={styles.button} onPress={() => navigation.navigate('CodeScannerPage')}>
+        </PressableOpacity> */}
+        {/* <PressableOpacity style={styles.button} onPress={() => navigation.navigate('CodeScannerPage')}>
           <IonIcon name="qr-code-outline" color="white" size={24} />
-        </PressableOpacity>
+        </PressableOpacity> */}
       </View>
     </View>
   )

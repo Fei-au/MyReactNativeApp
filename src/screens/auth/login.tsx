@@ -31,6 +31,7 @@ import Section from '../../components/Section';
 import { commonStyles } from '../../styles/styles';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Routes } from '../../Routes';
+import { useToast } from 'native-base';
 
 
 type tabType = {title : string};
@@ -45,6 +46,8 @@ type Props = NativeStackScreenProps<Routes, 'PermissionsPage'>
 function Login({navigation}: any): React.JSX.Element {
 	
   const isDarkMode = useColorScheme() === 'dark';
+  const toast = useToast();
+
 	const [page, setPage] = useState<string>('Login');
 	const [account, setAccount] = useState('');
 	const [password, setPassword] = useState('');
@@ -59,12 +62,14 @@ function Login({navigation}: any): React.JSX.Element {
 	}
 
 	const handleLogin = ()=>{
-		if(!account){
-			Toast.fail({content: 'Please enter email address or username.'});
-		}
-		if(password.length < 6){
-			Toast.fail({content: 'Password should be at least 6 characters.'});
-		}
+		// if(!account){
+		// 	toast.show({description: 'Please enter email address or username.'});
+		// 	return;
+		// }
+		// if(password.length < 6){
+		// 	toast.show({description: 'Password should be at least 6 characters.'});
+		// 	return;
+		// }
 		navigation.navigate('Home');
 	}
 
