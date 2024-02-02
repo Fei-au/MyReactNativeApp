@@ -76,10 +76,12 @@ function Scan(): React.JSX.Element {
 
   // Following params used for after scraping
   const [caseNumber, setCaseNumber] = useState('');
+  const [itemNumber, setItemNumber] = useState('');
   const [title, setTitle] = useState('');
   const [numCode, setNumCode] = useState('');
   const [boCode, setBOCode] = useState('');
   const [xCode, setXCode] = useState('');
+  const [lpnCode, setLpnCode] = useState('');
   const [description, setDescription] = useState('');
   const [pics, setPics] = useState<{}[]>([]); // Item pictures, get from 1. database 2. scraped 3. photos as ordered
   
@@ -146,6 +148,10 @@ function Scan(): React.JSX.Element {
   const handleCaseNumberChange=(text : string)=>{
     const numericText = text.replace(/[^0-9]/g, '');
     setCaseNumber(numericText);
+  }
+  const handleItemNumberChange=(text : string)=>{
+    const numericText = text.replace(/[^0-9]/g, '');
+    setItemNumber(numericText);
   }
 
   const handlePriceChange = (text: string)=>{
@@ -255,6 +261,15 @@ function Scan(): React.JSX.Element {
           />
         </View>
         <View style={styles.inputContainerStyle}>
+          <Text style={styles.labelStyle}>Item Number</Text>
+          <TextInput
+            style={styles.inputStyle}
+            keyboardType='numeric'
+            onChangeText={handleItemNumberChange}
+            value={itemNumber + ''}
+          />
+        </View>
+        <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Title</Text>
           <TextInput
             style={styles.inputStyle}
@@ -287,6 +302,15 @@ function Scan(): React.JSX.Element {
             style={styles.inputStyle}
             onChangeText={setXCode}
             value={xCode}
+            readOnly={!isManulInput}
+          />
+        </View>
+        <View style={styles.inputContainerStyle}>
+          <Text style={styles.labelStyle}>LPN Code</Text>
+          <TextInput
+            style={styles.inputStyle}
+            onChangeText={setLpnCode}
+            value={lpnCode}
             readOnly={!isManulInput}
           />
         </View>
