@@ -1,5 +1,5 @@
 import { ImagePicker, Toast } from '@ant-design/react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Button,
@@ -25,6 +25,9 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Routes } from '../../Routes';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
+import { get_item_info_by_code } from '../../services/inventory';
+import axios, { AxiosError } from 'axios';
+import { NotFoundError } from '../../utils/customizeError';
 
 
 interface CaseNumParam {
@@ -78,9 +81,11 @@ function Scan(): React.JSX.Element {
   const [caseNumber, setCaseNumber] = useState('');
   const [itemNumber, setItemNumber] = useState('');
   const [title, setTitle] = useState('');
-  const [numCode, setNumCode] = useState('');
-  const [boCode, setBOCode] = useState('');
-  const [xCode, setXCode] = useState('');
+
+  const [bCode, setBCode] = useState('');
+  const [upcCode, setUpcCode] = useState('');
+  const [eanCode, setEanCode] = useState('');
+  const [FNSkuCode, setFNSkuCode] = useState('');
   const [lpnCode, setLpnCode] = useState('');
   const [description, setDescription] = useState('');
   const [pics, setPics] = useState<{}[]>([]); // Item pictures, get from 1. database 2. scraped 3. photos as ordered
@@ -105,14 +110,51 @@ function Scan(): React.JSX.Element {
   const [newColor, setNewColor] = useState('');
   const [price, setPrice] = useState('999.00');
 
+  const isFirst = useRef(true);
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
   useEffect(()=>{
-    setHasScraped(true);
+    setHasScraped(false);
     setIsManulInput(false);
   }, [])
+
+  useEffect(()=>{
+    if(isFirst.current){
+      isFirst.current = false;
+      return;
+    }
+    const func = async()=>{
+      try{
+        const item = await get_item_info_by_code(code);
+        setHasScraped(true)
+        setTitle(item.title)
+        setCaseNumber('1')
+        setBCode(item.upc_code)
+        setUpcCode(item.upc_code)
+        setEanCode(item.ean_code)
+        setFNSkuCode(item.fnsku_code)
+        setLpnCode(item.lpn_code)
+        setDescription(item.description)
+        setStatus(item.status_id)
+        setClassification(item.category_id)
+        setSize(item.size)
+        setColor(item.color)
+        setPrice(item.msrp_price)
+      }catch(err){
+        const error = err as Error | AxiosError | NotFoundError;
+        if(error instanceof NotFoundError){
+          setIsManulInput(true);
+        }else if(axios.isAxiosError(error)){
+
+        }else{
+          console.log('err', err);
+        }
+      }
+    }
+    func();
+  }, [code])
 
   const handleScan = ()=>{
     navigation.navigate('CodeScannerPage', {getBarCode: getBarCode});
@@ -123,14 +165,13 @@ function Scan(): React.JSX.Element {
       setIsCodeReadOnly(false);
     }else{
       setCode(barcodes[0]);
-
+      
     }
   }
 
-  const handleCodeOnBlur = async()=>{
+  const handleCodeOnBlur = async(value)=>{
     // valid the code's url
-    // 
-
+    console.log('value', value)
     let valid = false;
     if(valid){
       setUrl('value');
@@ -231,7 +272,7 @@ function Scan(): React.JSX.Element {
             readOnly={isCodeReadOnly}
             onChangeText={setCode}
             value={code}
-            onBlur={handleCodeOnBlur}
+            // onBlur={handleCodeOnBlur}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -279,29 +320,47 @@ function Scan(): React.JSX.Element {
           />
         </View>
         <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>Number Code</Text>
+          <Text style={styles.labelStyle}>Description</Text>
           <TextInput
             style={styles.inputStyle}
-            onChangeText={setNumCode}
-            value={numCode}
+            onChangeText={setDescription}
+            value={description}
             readOnly={!isManulInput}
           />
         </View>
         <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>BO Code</Text>
+          <Text style={styles.labelStyle}>B0 Code</Text>
           <TextInput
             style={styles.inputStyle}
-            onChangeText={setBOCode}
-            value={boCode}
+            onChangeText={setBCode}
+            value={bCode}
             readOnly={!isManulInput}
           />
         </View>
         <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>X Code</Text>
+          <Text style={styles.labelStyle}>UPC Code</Text>
           <TextInput
             style={styles.inputStyle}
-            onChangeText={setXCode}
-            value={xCode}
+            onChangeText={setUpcCode}
+            value={upcCode}
+            readOnly={!isManulInput}
+          />
+        </View>
+        <View style={styles.inputContainerStyle}>
+          <Text style={styles.labelStyle}>EAN Code</Text>
+          <TextInput
+            style={styles.inputStyle}
+            onChangeText={setEanCode}
+            value={eanCode}
+            readOnly={!isManulInput}
+          />
+        </View>
+        <View style={styles.inputContainerStyle}>
+          <Text style={styles.labelStyle}>FNSku Code</Text>
+          <TextInput
+            style={styles.inputStyle}
+            onChangeText={setFNSkuCode}
+            value={FNSkuCode}
             readOnly={!isManulInput}
           />
         </View>
@@ -311,15 +370,6 @@ function Scan(): React.JSX.Element {
             style={styles.inputStyle}
             onChangeText={setLpnCode}
             value={lpnCode}
-            readOnly={!isManulInput}
-          />
-        </View>
-        <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>Description</Text>
-          <TextInput
-            style={styles.inputStyle}
-            onChangeText={setDescription}
-            value={description}
             readOnly={!isManulInput}
           />
         </View>

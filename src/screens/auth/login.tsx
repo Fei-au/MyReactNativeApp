@@ -15,11 +15,9 @@ import {
   Text,
   useColorScheme,
   View,
-	Dimensions,
 	TextInput,
 	TouchableOpacity,
 	Button,
-	Alert,
 } from 'react-native';
 
 import { Checkbox, Tabs, Toast } from '@ant-design/react-native';
@@ -32,6 +30,9 @@ import { commonStyles } from '../../styles/styles';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Routes } from '../../Routes';
 import { useToast } from 'native-base';
+import { get_item_info_by_code, scrap_info_by_bo_code } from '../../services/inventory';
+import { errorHandler } from '../../utils/ErrorHandler';
+import axios, { AxiosError } from 'axios';
 
 
 type tabType = {title : string};
@@ -136,6 +137,20 @@ function Login({navigation}: any): React.JSX.Element {
 	// 		return {};
 	// 	}
 	// }
+
+	const handleTest = async ()=>{
+		try{
+			// const res = await get_item_info_by_code('B00SCS5RZU');
+			const res2 = await scrap_info_by_bo_code('B00SCS5RZU');
+		}catch(err){
+			const error = err as Error | AxiosError;
+			if(axios.isAxiosError(error)){
+				errorHandler(error);
+			}else{
+				console.log(error.message);
+			}
+		}
+	}
 	
   return (
 		<SafeAreaView>
@@ -156,6 +171,9 @@ function Login({navigation}: any): React.JSX.Element {
 					</View>
 				</View>
 				{renderPage()}
+				<View style={{height: 40}}>
+					<Button title='Test' onPress={handleTest}></Button>
+				</View>
 			</ScrollView>
 		</SafeAreaView>
   );
