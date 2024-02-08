@@ -260,7 +260,7 @@ function Scan(): React.JSX.Element {
       {/* Scan button container */}
       <TouchableOpacity style={commonStyles.center} onPress={handleScan}>
         <MaterialIcon name='barcode-scan' size={50}/>
-        <Text>Scan</Text>
+        <Text>Scan Code</Text>
       </TouchableOpacity>
       <View style={{height: 20}}/>
       {!hasScraped ? 

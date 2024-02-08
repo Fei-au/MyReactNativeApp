@@ -31,7 +31,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Routes } from '../../Routes';
 import { useToast } from 'native-base';
 import { get_item_info_by_code, scrap_info_by_bo_code } from '../../services/inventory';
-import { errorHandler } from '../../utils/ErrorHandler';
+import { errorHandler } from '../../utils/errorHandler';
 import axios, { AxiosError } from 'axios';
 
 
@@ -142,6 +142,7 @@ function Login({navigation}: any): React.JSX.Element {
 		try{
 			// const res = await get_item_info_by_code('B00SCS5RZU');
 			const res2 = await scrap_info_by_bo_code('B00SCS5RZU');
+			console.log('res', res2);
 		}catch(err){
 			const error = err as Error | AxiosError;
 			if(axios.isAxiosError(error)){
