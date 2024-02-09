@@ -28,6 +28,7 @@ import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 import { get_item_info_by_code } from '../../services/inventory';
 import axios, { AxiosError } from 'axios';
 import { NotFoundError } from '../../utils/customizeError';
+import { normalErrorHandler } from '../../utils/errorHandler';
 
 
 interface CaseNumParam {
@@ -69,10 +70,12 @@ function Scan(): React.JSX.Element {
   const toast = useToast();
 
   const [code, setCode] = useState('');
-  const [isCodeReadOnly, setIsCodeReadOnly] = useState(true); // if not capture barcode or manually go to input mode
+  // const [isCodeReadOnly, setIsCodeReadOnly] = useState(true); // if not capture barcode or manually go to input mode
   const [url, setUrl] = useState('');
-  const [isUrlReadOnly, setIsUrlReadOnly] = useState(true);
-  const [hasScraped, setHasScraped] = useState(false);
+  // const [isUrlReadOnly, setIsUrlReadOnly] = useState(true);
+  const [hasFoundInfo, setHasFoundInfo] = useState(false);
+  // If no code info database and the code is not B0 code, user mamully find B0 code of input the web link
+  const [isManulSearch, setIsManulSearch] = useState(false);
 
   // If no url to scrap, use manul input mode
   const [isManulInput, setIsManulInput] = useState(false);
@@ -88,9 +91,9 @@ function Scan(): React.JSX.Element {
   const [FNSkuCode, setFNSkuCode] = useState('');
   const [lpnCode, setLpnCode] = useState('');
   const [description, setDescription] = useState('');
-  const [pics, setPics] = useState<{}[]>([]); // Item pictures, get from 1. database 2. scraped 3. photos as ordered
+  const [pics, setPics] = useState<{}[]>([]); // Item pictures, get from 1. database 2. scraped 3. photos taken
   
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState({});
   const [statusData, setStatusData] = useState<SelectDataInterface[]>([]); // Status enum data, get from database
   const [statusNote, setStatusNote] = useState('');
   
@@ -109,52 +112,64 @@ function Scan(): React.JSX.Element {
   const [isColorDisable, setIsColorDisable] = useState(true);
   const [newColor, setNewColor] = useState('');
   const [price, setPrice] = useState('999.00');
-
+  const bidStartPriceRef = useRef(0);
   const isFirst = useRef(true);
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
   useEffect(()=>{
-    setHasScraped(false);
+    setHasFoundInfo(false);
     setIsManulInput(false);
   }, [])
 
-  useEffect(()=>{
-    if(isFirst.current){
-      isFirst.current = false;
+  // useEffect(()=>{
+  //   if(isFirst.current){
+  //     isFirst.current = false;
+  //     return;
+  //   }
+    
+  //   func();
+  // }, [code])
+
+  const func = async()=>{
+    if(!code){
       return;
     }
-    const func = async()=>{
-      try{
-        const item = await get_item_info_by_code(code);
-        setHasScraped(true)
-        setTitle(item.title)
-        setCaseNumber('1')
-        setBCode(item.upc_code)
-        setUpcCode(item.upc_code)
-        setEanCode(item.ean_code)
-        setFNSkuCode(item.fnsku_code)
-        setLpnCode(item.lpn_code)
-        setDescription(item.description)
-        setStatus(item.status_id)
-        setClassification(item.category_id)
-        setSize(item.size)
-        setColor(item.color)
-        setPrice(item.msrp_price)
-      }catch(err){
-        const error = err as Error | AxiosError | NotFoundError;
-        if(error instanceof NotFoundError){
-          setIsManulInput(true);
-        }else if(axios.isAxiosError(error)){
-
-        }else{
-          console.log('err', err);
-        }
+    try{
+      const item = await get_item_info_by_code(code);
+      console.log('item', item)
+      setHasFoundInfo(true)
+      setTitle(item.title)
+      setDescription(item.description)
+      setCaseNumber('1')
+      setBCode(item.b_code)
+      setUpcCode(item.upc_code)
+      setEanCode(item.ean_code)
+      setFNSkuCode(item.fnsku_code)
+      setLpnCode(item.lpn_code)
+      setPics(item.pics.map((ele: string)=>{return {id: Math.random(), url: ele}}))
+      if(item.category){
+        setClassificationData([{label: item.category.name, value: item.category.id}])
+        setClassification(item.category.id)
+      }
+      setColor(item.customize_color)
+      setPrice(item.msrp_price+'')
+      bidStartPriceRef.current = item.bid_start_price;
+    }catch(err){
+      const error = err as Error | AxiosError | NotFoundError;
+      if(error instanceof NotFoundError){
+        toast.show({
+          description: 'No item info found in database, please input B0 code or Amz website link',
+        })
+        setIsManulSearch(true);
+      }else if(axios.isAxiosError(error)){
+        console.log('not found', err);
+      }else{
+        normalErrorHandler(error);
       }
     }
-    func();
-  }, [code])
+  }
 
   const handleScan = ()=>{
     navigation.navigate('CodeScannerPage', {getBarCode: getBarCode});
@@ -162,28 +177,32 @@ function Scan(): React.JSX.Element {
 
   const getBarCode = (barcodes: string[])=>{
     if(barcodes.length === 0){
-      setIsCodeReadOnly(false);
+      setIsManulSearch(true)
+      toast.show({
+        description: 'No code found, please enter it manully',
+      })
     }else{
       setCode(barcodes[0]);
-      
+      func();
     }
   }
 
   const handleCodeOnBlur = async(value)=>{
     // valid the code's url
-    console.log('value', value)
-    let valid = false;
-    if(valid){
-      setUrl('value');
-    }else{
-      toast.show({
-        description: 'No relative website found, please input item information manully',
-      })
-      setTimeout(() => {
-        setHasScraped(true);
-        setIsManulInput(true);
-      }, 5000);
-    }
+    func();
+    // console.log('value', value)
+    // let valid = false;
+    // if(valid){
+    //   setUrl('value');
+    // }else{
+    //   toast.show({
+    //     description: 'No relative website found, please input item information manully',
+    //   })
+    //   setTimeout(() => {
+    //     setHasFoundInfo(true);
+    //     setIsManulInput(true);
+    //   }, 5000);
+    // }
   }
 
   const handleCaseNumberChange=(text : string)=>{
@@ -211,12 +230,12 @@ function Scan(): React.JSX.Element {
       })
       setTimeout(() => {
         setIsManulInput(true);
-        setHasScraped(true);
+        setHasFoundInfo(true);
       }, 3000);
     }else{
       // Set info
 
-      setHasScraped(true);
+      setHasFoundInfo(true);
     }
   }
 
@@ -263,23 +282,23 @@ function Scan(): React.JSX.Element {
         <Text>Scan Code</Text>
       </TouchableOpacity>
       <View style={{height: 20}}/>
-      {!hasScraped ? 
+      {!hasFoundInfo ? 
       <>
         <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Code</Text>
           <TextInput
             style={styles.inputStyle}
-            readOnly={isCodeReadOnly}
+            readOnly={!isManulSearch}
             onChangeText={setCode}
             value={code}
-            // onBlur={handleCodeOnBlur}
+            onBlur={handleCodeOnBlur}
           />
         </View>
         <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Website Link</Text>
           <TextInput
             style={styles.inputStyle}
-            readOnly={isUrlReadOnly}
+            readOnly={!isManulSearch}
             onChangeText={setUrl}
             value={url}
           />

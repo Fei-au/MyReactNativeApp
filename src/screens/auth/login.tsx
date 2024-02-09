@@ -31,7 +31,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Routes } from '../../Routes';
 import { useToast } from 'native-base';
 import { get_item_info_by_code, scrap_info_by_bo_code } from '../../services/inventory';
-import { errorHandler } from '../../utils/errorHandler';
+import { axiosErrorHandler } from '../../utils/errorHandler';
 import axios, { AxiosError } from 'axios';
 
 
@@ -146,7 +146,7 @@ function Login({navigation}: any): React.JSX.Element {
 		}catch(err){
 			const error = err as Error | AxiosError;
 			if(axios.isAxiosError(error)){
-				errorHandler(error);
+				axiosErrorHandler(error);
 			}else{
 				console.log(error.message);
 			}

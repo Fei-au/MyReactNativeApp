@@ -10,15 +10,15 @@ console.log('address', process.env);
 
 export const get_item_info_by_code = async (code)=>{
     try{
+        console.log('address', `${address}${app}/get_item_info_by_code/${code}`)
         const {data} = await axios.get(`${address}${app}/get_item_info_by_code/${code}`);
         if(data.status === 'success'){
-            const r = JSON.parse(data.data);
-            return r[0].fields;
+            return data.data;
         }else if(data.status === 'not found'){
             throw new NotFoundError('not found');
         }
     }catch(err){
-        console.log('err', err)
+        throw new Error(err)
     }
 }
 
@@ -27,7 +27,6 @@ export const scrap_info_by_bo_code = async (code)=>{
     try{
         const res = await axios.get(`${address}${app}/scrap_info_by_bo_code/${code}`);
     }catch(err){
-        console.log('err',err)
         throw(err);
     }
 }
