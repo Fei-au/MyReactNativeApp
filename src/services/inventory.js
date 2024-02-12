@@ -31,6 +31,14 @@ export const scrap_info_by_bo_code = async (code)=>{
     }
 }
 
+export const getStatus = async ()=>{
+    console.log('address', `${address}${app}/status`);
+    const {data} = await axios.get(`${address}${app}/status`);
+    return data;
+}
+
+
+
 
 
 

@@ -25,7 +25,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Routes } from '../../Routes';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
-import { get_item_info_by_code } from '../../services/inventory';
+import { get_item_info_by_code, getStatus } from '../../services/inventory';
 import axios, { AxiosError } from 'axios';
 import { NotFoundError } from '../../utils/customizeError';
 import { normalErrorHandler } from '../../utils/errorHandler';
@@ -38,6 +38,22 @@ interface CaseNumParam {
 interface SelectDataInterface {
   label: string,
   value: string,
+}
+
+interface IsManulInputParams {
+  caseNumber?: boolean,
+  itemNumber?: boolean,
+  title?: boolean,
+  description?: boolean,
+  bCode?: boolean,
+  upcCode?: boolean,
+  eanCode?: boolean,
+  FNSkuCode?: boolean,
+  lpnCode?: boolean,
+  classification?: boolean,
+  size?: boolean,
+  color?: boolean,
+  price?: boolean,
 }
 
 // type Props = NativeStackScreenProps<Routes, 'CodeScannerPage'>
@@ -78,38 +94,38 @@ function Scan(): React.JSX.Element {
   const [isManulSearch, setIsManulSearch] = useState(false);
 
   // If no url to scrap, use manul input mode
-  const [isManulInput, setIsManulInput] = useState(false);
+  const [isManulInput, setIsManulInput] = useState<IsManulInputParams>({});
 
   // Following params used for after scraping
   const [caseNumber, setCaseNumber] = useState('');
   const [itemNumber, setItemNumber] = useState('');
   const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
 
   const [bCode, setBCode] = useState('');
   const [upcCode, setUpcCode] = useState('');
   const [eanCode, setEanCode] = useState('');
   const [FNSkuCode, setFNSkuCode] = useState('');
   const [lpnCode, setLpnCode] = useState('');
-  const [description, setDescription] = useState('');
   const [pics, setPics] = useState<{}[]>([]); // Item pictures, get from 1. database 2. scraped 3. photos taken
   
-  const [status, setStatus] = useState({});
+  const [status, setStatus] = useState('');
   const [statusData, setStatusData] = useState<SelectDataInterface[]>([]); // Status enum data, get from database
   const [statusNote, setStatusNote] = useState('');
   
   const [classification, setClassification] = useState('');
   const [classificationData, setClassificationData] = useState<SelectDataInterface[]>([{label: 'Add New', value: 'Add New'}]);
-  const [isClassDisable, setIsClassDisable] = useState(true); // Classfication disabled as default, set false when no classification scraped.
+  // const [isClassDisable, setIsClassDisable] = useState(true); // Classfication disabled as default, set false when no classification scraped.
   const [newClass, setNewClass] = useState('');
 
   const [size, setSize] = useState('');
   const [sizeData, setSizeData] = useState<SelectDataInterface[]>([{label: 'Add New', value: 'Add New'}]);
-  const [isSizeDisable, setisSizeDisable] = useState(true);
+  // const [isSizeDisable, setisSizeDisable] = useState(true);
   const [newSize, setNewSize] = useState('');
 
   const [color, setColor] = useState('');
   const [colorData, setColorData] = useState<SelectDataInterface[]>([{label: 'Add New', value: 'Add New'}]);
-  const [isColorDisable, setIsColorDisable] = useState(true);
+  // const [isColorDisable, setIsColorDisable] = useState(true);
   const [newColor, setNewColor] = useState('');
   const [price, setPrice] = useState('999.00');
   const bidStartPriceRef = useRef(0);
@@ -119,8 +135,14 @@ function Scan(): React.JSX.Element {
   };
 
   useEffect(()=>{
+    const func = async ()=>{
+      const list = await getStatus();
+      console.log('list', list);
+      setStatusData(list.map((ele, index)=> {return {label: ele, value: index + ''} }))
+    }
+    func();
     setHasFoundInfo(false);
-    setIsManulInput(false);
+    // setIsManulInput(false);
   }, [])
 
   // useEffect(()=>{
@@ -139,22 +161,79 @@ function Scan(): React.JSX.Element {
     try{
       const item = await get_item_info_by_code(code);
       console.log('item', item)
+      const tempManulInput : IsManulInputParams= {...isManulInput};
       setHasFoundInfo(true)
-      setTitle(item.title)
-      setDescription(item.description)
-      setCaseNumber('1')
-      setBCode(item.b_code)
-      setUpcCode(item.upc_code)
-      setEanCode(item.ean_code)
-      setFNSkuCode(item.fnsku_code)
-      setLpnCode(item.lpn_code)
+
+      if(item.caseNumber){
+        setCaseNumber('1')
+      }else{
+        tempManulInput.caseNumber = true;
+      }
+      // will issue item number after submit the item.
+      // if(item.itemNumber){
+      //   setCaseNumber(item.itemNumber)
+      // }else{
+      //   tempManulInput.itemNumber = true;
+      // }
+      if(item.title){
+        setTitle(item.title);
+      }else{
+        tempManulInput.title = true;
+      }
+      if(item.description){
+        setDescription(item.description)
+      }else{
+        tempManulInput.description = true;
+      }
+
+      if(item.b_code){
+        setBCode(item.b_code)
+      }else{
+        tempManulInput.bCode = true;
+      }
+      if(item.upc_code){
+        setUpcCode(item.upc_code)
+      }else{
+        tempManulInput.upcCode = true;
+      }
+      if(item.ean_code){
+        setEanCode(item.ean_code)
+      }else{
+        tempManulInput.eanCode = true;
+      }
+      if(item.fnsku_code){
+        setFNSkuCode(item.fnsku_code)
+      }else{
+        tempManulInput.FNSkuCode = true;
+      }
+      if(item.lpn_code){
+        setLpnCode(item.lpn_code)
+      }else{
+        tempManulInput.lpnCode = true;
+      }
+      if(item.customize_color){
+        setColor(item.customize_color)
+      }else{
+        tempManulInput.color = true;
+      }
+      if(item.customize_size){
+        setColor(item.customize_size)
+      }else{
+        tempManulInput.size = true;
+      }
+      if(item.msrp_price){
+        setPrice(item.msrp_price+'')
+      }else{
+        tempManulInput.price = true;
+      }
+
       setPics(item.pics.map((ele: string)=>{return {id: Math.random(), url: ele}}))
       if(item.category){
         setClassificationData([{label: item.category.name, value: item.category.id}])
         setClassification(item.category.id)
       }
-      setColor(item.customize_color)
-      setPrice(item.msrp_price+'')
+      setIsManulInput(tempManulInput);
+      
       bidStartPriceRef.current = item.bid_start_price;
     }catch(err){
       const error = err as Error | AxiosError | NotFoundError;
@@ -228,10 +307,22 @@ function Scan(): React.JSX.Element {
       toast.show({
         description: 'Nothing scraped, please input item information manully',
       })
-      setTimeout(() => {
-        setIsManulInput(true);
-        setHasFoundInfo(true);
-      }, 3000);
+      setHasFoundInfo(true);
+      setIsManulInput({
+        caseNumber: true,
+        itemNumber: true,
+        title: true,
+        description: true,
+        bCode: true,
+        upcCode: true,
+        eanCode: true,
+        FNSkuCode: true,
+        lpnCode: true,
+        classification: true,
+        size: true,
+        color: true,
+        price: true,
+      });
     }else{
       // Set info
 
@@ -318,6 +409,7 @@ function Scan(): React.JSX.Element {
             keyboardType='numeric'
             onChangeText={handleCaseNumberChange}
             value={caseNumber + ''}
+            readOnly={!isManulInput.caseNumber}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -327,6 +419,7 @@ function Scan(): React.JSX.Element {
             keyboardType='numeric'
             onChangeText={handleItemNumberChange}
             value={itemNumber + ''}
+            readOnly={!isManulInput.itemNumber}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -335,7 +428,7 @@ function Scan(): React.JSX.Element {
             style={styles.inputStyle}
             onChangeText={setTitle}
             value={title}
-            readOnly={!isManulInput}
+            readOnly={!isManulInput.title}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -344,7 +437,7 @@ function Scan(): React.JSX.Element {
             style={styles.inputStyle}
             onChangeText={setDescription}
             value={description}
-            readOnly={!isManulInput}
+            readOnly={!isManulInput.description}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -353,7 +446,7 @@ function Scan(): React.JSX.Element {
             style={styles.inputStyle}
             onChangeText={setBCode}
             value={bCode}
-            readOnly={!isManulInput}
+            readOnly={!isManulInput.bCode}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -362,7 +455,7 @@ function Scan(): React.JSX.Element {
             style={styles.inputStyle}
             onChangeText={setUpcCode}
             value={upcCode}
-            readOnly={!isManulInput}
+            readOnly={!isManulInput.upcCode}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -371,7 +464,7 @@ function Scan(): React.JSX.Element {
             style={styles.inputStyle}
             onChangeText={setEanCode}
             value={eanCode}
-            readOnly={!isManulInput}
+            readOnly={!isManulInput.eanCode}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -389,7 +482,7 @@ function Scan(): React.JSX.Element {
             style={styles.inputStyle}
             onChangeText={setLpnCode}
             value={lpnCode}
-            readOnly={!isManulInput}
+            readOnly={!isManulInput.lpnCode}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -409,7 +502,7 @@ function Scan(): React.JSX.Element {
             {statusData.map((item)=><Select.Item label={item.label} value={item.value} />)}
           </Select>
         </View>
-        {(status !== '' && status !== 'new') ? <View style={styles.inputContainerStyle}>
+        {(status !== '' && status !== '0') ? <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Status Note</Text>
           <TextInput
             style={styles.inputStyle}
@@ -419,7 +512,7 @@ function Scan(): React.JSX.Element {
         </View> : null}
         <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Classification</Text>
-          <Select isDisabled={isClassDisable} selectedValue={classification} minWidth="200" accessibilityLabel="Choose Class" placeholder="Choose Class" _selectedItem={{bg: "teal.600", endIcon: <AntIcon name='check' size={5} />}} mt={1} onValueChange={setClassification}>
+          <Select isDisabled={!isManulInput.classification} selectedValue={classification} minWidth="200" accessibilityLabel="Choose Class" placeholder="Choose Class" _selectedItem={{bg: "teal.600", endIcon: <AntIcon name='check' size={5} />}} mt={1} onValueChange={setClassification}>
             {classificationData.map((item)=><Select.Item label={item.label} value={item.value} />)}
           </Select>
           {classification === 'Add New' && <TextInput
@@ -430,25 +523,37 @@ function Scan(): React.JSX.Element {
         </View>
         <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Size</Text>
-          <Select isDisabled={isSizeDisable} selectedValue={size} minWidth="200" accessibilityLabel="Choose Size" placeholder="Choose Size" _selectedItem={{bg: "teal.600", endIcon: <AntIcon name='check' size={5} />}} mt={1} onValueChange={setSize}>
+          {/* <Select isDisabled={!isManulInput.size} selectedValue={size} minWidth="200" accessibilityLabel="Choose Size" placeholder="Choose Size" _selectedItem={{bg: "teal.600", endIcon: <AntIcon name='check' size={5} />}} mt={1} onValueChange={setSize}>
             {sizeData.map((item)=><Select.Item label={item.label} value={item.value} />)}
           </Select>
           {size === 'Add New' && <TextInput
             style={[styles.inputStyle, {marginTop: 10}]}
             onChangeText={setNewSize}
             value={newSize}
-          />}
+          />} */}
+          <TextInput
+            style={styles.inputStyle}
+            onChangeText={setSize}
+            value={size}
+            readOnly={!isManulInput.size}
+          />
         </View>
         <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Color</Text>
-          <Select isDisabled={isColorDisable} selectedValue={color} minWidth="200" accessibilityLabel="Choose Size" placeholder="Choose Color" _selectedItem={{bg: "teal.600", endIcon: <AntIcon name='check' size={5} />}} mt={1} onValueChange={setColor}>
+          {/* <Select isDisabled={!isManulInput.color} selectedValue={color} minWidth="200" accessibilityLabel="Choose Size" placeholder="Choose Color" _selectedItem={{bg: "teal.600", endIcon: <AntIcon name='check' size={5} />}} mt={1} onValueChange={setColor}>
             {colorData.map((item)=><Select.Item label={item.label} value={item.value} />)}
           </Select>
           {color === 'Add New' && <TextInput
             style={[styles.inputStyle, {marginTop: 10}]}
             onChangeText={setNewColor}
             value={newColor}
-          />}
+          />} */}
+          <TextInput
+            style={styles.inputStyle}
+            onChangeText={setColor}
+            value={color}
+            readOnly={!isManulInput.color}
+          />
         </View>
         <View style={[styles.inputContainerStyle]}>
           <Text style={styles.labelStyle}>Price</Text>
@@ -457,6 +562,7 @@ function Scan(): React.JSX.Element {
             onChangeText={handlePriceChange}
             value={price}
             keyboardType='numeric'
+            readOnly={!isManulInput.price}
           />
         </View>
         <View style={[styles.inputContainerStyle, {paddingBottom: 30}]}>
