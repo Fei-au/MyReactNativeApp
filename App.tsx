@@ -10,6 +10,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Login from './src/screens/auth/login';
 import Home from './src/screens/';
+import ItemEditor from './src/screens/import/ItemEditor';
 import PermissionsPage from './src/screens/auth/PermissionsPage'
 import { NativeBaseProvider} from "native-base";
 import { Camera } from 'react-native-vision-camera';
@@ -22,6 +23,7 @@ function App(): React.JSX.Element {
   const cameraPermission = Camera.getCameraPermissionStatus()
   const showPermissionsPage = cameraPermission !== 'granted'
 
+  
   return (
     <NativeBaseProvider>
       <NavigationContainer>
@@ -40,6 +42,10 @@ function App(): React.JSX.Element {
           <Stack.Screen name="Home"
             component={Home}
             options={{title: 'Start Scan'}}
+          />
+          <Stack.Screen name="ItemEditor"
+            component={ItemEditor}
+            options={{title: 'Add or Edit Item'}}
           />
           <Stack.Screen name="CodeScannerPage"
             component={CodeScannerPage}

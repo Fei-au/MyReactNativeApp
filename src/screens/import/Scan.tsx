@@ -1,5 +1,8 @@
 import { ImagePicker, Toast } from '@ant-design/react-native';
 import React, { useEffect, useRef, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
 import {
   Alert,
   Button,
@@ -25,10 +28,10 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Routes } from '../../Routes';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
-import { get_item_info_by_code, getStatus } from '../../services/inventory';
+import { get_item_info_by_code, getStatus, scrap_info_by_url } from '../../services/inventory';
 import axios, { AxiosError } from 'axios';
 import { NotFoundError } from '../../utils/customizeError';
-import { normalErrorHandler } from '../../utils/errorHandler';
+import useErrorHandler  from '../../hooks/useErrorHandler';
 
 
 interface CaseNumParam {
@@ -79,176 +82,18 @@ const requestSavePermission = async (): Promise<boolean> => {
   return hasPermission
 }
 
-function Scan(): React.JSX.Element {
+function Scan(props): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
+  const showError = useErrorHandler();
   // Code, url used before scraping
   const navigation = useNavigation();
   const toast = useToast();
-
   const [code, setCode] = useState('');
   // const [isCodeReadOnly, setIsCodeReadOnly] = useState(true); // if not capture barcode or manually go to input mode
   const [url, setUrl] = useState('');
-  // const [isUrlReadOnly, setIsUrlReadOnly] = useState(true);
-  const [hasFoundInfo, setHasFoundInfo] = useState(false);
-  // If no code info database and the code is not B0 code, user mamully find B0 code of input the web link
-  const [isManulSearch, setIsManulSearch] = useState(false);
-
-  // If no url to scrap, use manul input mode
-  const [isManulInput, setIsManulInput] = useState<IsManulInputParams>({});
-
-  // Following params used for after scraping
-  const [caseNumber, setCaseNumber] = useState('');
-  const [itemNumber, setItemNumber] = useState('');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-
-  const [bCode, setBCode] = useState('');
-  const [upcCode, setUpcCode] = useState('');
-  const [eanCode, setEanCode] = useState('');
-  const [FNSkuCode, setFNSkuCode] = useState('');
-  const [lpnCode, setLpnCode] = useState('');
-  const [pics, setPics] = useState<{}[]>([]); // Item pictures, get from 1. database 2. scraped 3. photos taken
-  
-  const [status, setStatus] = useState('');
-  const [statusData, setStatusData] = useState<SelectDataInterface[]>([]); // Status enum data, get from database
-  const [statusNote, setStatusNote] = useState('');
-  
-  const [classification, setClassification] = useState('');
-  const [classificationData, setClassificationData] = useState<SelectDataInterface[]>([{label: 'Add New', value: 'Add New'}]);
-  // const [isClassDisable, setIsClassDisable] = useState(true); // Classfication disabled as default, set false when no classification scraped.
-  const [newClass, setNewClass] = useState('');
-
-  const [size, setSize] = useState('');
-  const [sizeData, setSizeData] = useState<SelectDataInterface[]>([{label: 'Add New', value: 'Add New'}]);
-  // const [isSizeDisable, setisSizeDisable] = useState(true);
-  const [newSize, setNewSize] = useState('');
-
-  const [color, setColor] = useState('');
-  const [colorData, setColorData] = useState<SelectDataInterface[]>([{label: 'Add New', value: 'Add New'}]);
-  // const [isColorDisable, setIsColorDisable] = useState(true);
-  const [newColor, setNewColor] = useState('');
-  const [price, setPrice] = useState('999.00');
-  const bidStartPriceRef = useRef(0);
-  const isFirst = useRef(true);
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
-
-  useEffect(()=>{
-    const func = async ()=>{
-      const list = await getStatus();
-      console.log('list', list);
-      setStatusData(list.map((ele, index)=> {return {label: ele, value: index + ''} }))
-    }
-    func();
-    setHasFoundInfo(false);
-    // setIsManulInput(false);
-  }, [])
-
-  // useEffect(()=>{
-  //   if(isFirst.current){
-  //     isFirst.current = false;
-  //     return;
-  //   }
-    
-  //   func();
-  // }, [code])
-
-  const func = async()=>{
-    if(!code){
-      return;
-    }
-    try{
-      const item = await get_item_info_by_code(code);
-      console.log('item', item)
-      const tempManulInput : IsManulInputParams= {...isManulInput};
-      setHasFoundInfo(true)
-
-      if(item.caseNumber){
-        setCaseNumber('1')
-      }else{
-        tempManulInput.caseNumber = true;
-      }
-      // will issue item number after submit the item.
-      // if(item.itemNumber){
-      //   setCaseNumber(item.itemNumber)
-      // }else{
-      //   tempManulInput.itemNumber = true;
-      // }
-      if(item.title){
-        setTitle(item.title);
-      }else{
-        tempManulInput.title = true;
-      }
-      if(item.description){
-        setDescription(item.description)
-      }else{
-        tempManulInput.description = true;
-      }
-
-      if(item.b_code){
-        setBCode(item.b_code)
-      }else{
-        tempManulInput.bCode = true;
-      }
-      if(item.upc_code){
-        setUpcCode(item.upc_code)
-      }else{
-        tempManulInput.upcCode = true;
-      }
-      if(item.ean_code){
-        setEanCode(item.ean_code)
-      }else{
-        tempManulInput.eanCode = true;
-      }
-      if(item.fnsku_code){
-        setFNSkuCode(item.fnsku_code)
-      }else{
-        tempManulInput.FNSkuCode = true;
-      }
-      if(item.lpn_code){
-        setLpnCode(item.lpn_code)
-      }else{
-        tempManulInput.lpnCode = true;
-      }
-      if(item.customize_color){
-        setColor(item.customize_color)
-      }else{
-        tempManulInput.color = true;
-      }
-      if(item.customize_size){
-        setColor(item.customize_size)
-      }else{
-        tempManulInput.size = true;
-      }
-      if(item.msrp_price){
-        setPrice(item.msrp_price+'')
-      }else{
-        tempManulInput.price = true;
-      }
-
-      setPics(item.pics.map((ele: string)=>{return {id: Math.random(), url: ele}}))
-      if(item.category){
-        setClassificationData([{label: item.category.name, value: item.category.id}])
-        setClassification(item.category.id)
-      }
-      setIsManulInput(tempManulInput);
-      
-      bidStartPriceRef.current = item.bid_start_price;
-    }catch(err){
-      const error = err as Error | AxiosError | NotFoundError;
-      if(error instanceof NotFoundError){
-        toast.show({
-          description: 'No item info found in database, please input B0 code or Amz website link',
-        })
-        setIsManulSearch(true);
-      }else if(axios.isAxiosError(error)){
-        console.log('not found', err);
-      }else{
-        normalErrorHandler(error);
-      }
-    }
-  }
 
   const handleScan = ()=>{
     navigation.navigate('CodeScannerPage', {getBarCode: getBarCode});
@@ -256,7 +101,6 @@ function Scan(): React.JSX.Element {
 
   const getBarCode = (barcodes: string[])=>{
     if(barcodes.length === 0){
-      setIsManulSearch(true)
       toast.show({
         description: 'No code found, please enter it manully',
       })
@@ -266,103 +110,42 @@ function Scan(): React.JSX.Element {
     }
   }
 
-  const handleCodeOnBlur = async(value)=>{
-    // valid the code's url
+  const func = async ()=>{
+    if(!code){
+      return;
+    }
+    try{
+      const item = await get_item_info_by_code(code);
+      navigation.navigate('ItemEditor', {itemInfo: item});
+    }catch(err : any){
+      if(err instanceof NotFoundError){
+        toast.show({
+          description: 'No item info found in database, please input B0 code or Amz website link',
+        })
+      }else{
+        showError(err);
+      }
+    }
+  }
+
+  const handleCodeOnBlur = ()=>{
     func();
-    // console.log('value', value)
-    // let valid = false;
-    // if(valid){
-    //   setUrl('value');
-    // }else{
-    //   toast.show({
-    //     description: 'No relative website found, please input item information manully',
-    //   })
-    //   setTimeout(() => {
-    //     setHasFoundInfo(true);
-    //     setIsManulInput(true);
-    //   }, 5000);
-    // }
   }
 
-  const handleCaseNumberChange=(text : string)=>{
-    const numericText = text.replace(/[^0-9]/g, '');
-    setCaseNumber(numericText);
-  }
-  const handleItemNumberChange=(text : string)=>{
-    const numericText = text.replace(/[^0-9]/g, '');
-    setItemNumber(numericText);
-  }
 
-  const handlePriceChange = (text: string)=>{
-    const cleanedText = text.replace(/[^0-9.]/g, '');
-    const formattedText = `$${cleanedText}`;
-    setPrice(formattedText);
-  }
 
   const onPressStartScraping = async()=>{
-    // Get item information
-    let info;
-    // Set information
-    if(!info){
+    try{
+      const item = await scrap_info_by_url(url);
+      navigation.navigate('ItemEditor', {itemInfo: item});
+    }catch(err){
       toast.show({
         description: 'Nothing scraped, please input item information manully',
       })
-      setHasFoundInfo(true);
-      setIsManulInput({
-        caseNumber: true,
-        itemNumber: true,
-        title: true,
-        description: true,
-        bCode: true,
-        upcCode: true,
-        eanCode: true,
-        FNSkuCode: true,
-        lpnCode: true,
-        classification: true,
-        size: true,
-        color: true,
-        price: true,
-      });
-    }else{
-      // Set info
-
-      setHasFoundInfo(true);
     }
   }
 
-  const onAddImageClick = ()=>{
-    if(pics.length >= 10){
-      toast.show({description: 'Reach maximum photo limit 10, please remove other photos first!'});
-      return;
-    }
-    navigation.navigate('CameraPage', {afterTakenPhoto: afterTakenPhoto});
-  }
 
-  const afterTakenPhoto = async(photo)=>{
-    const {path} = photo;
-    const type = 'photo';
-    try {
-      const hasPermission = await requestSavePermission()
-      if (!hasPermission) {
-        Alert.alert('Permission denied!', 'Vision Camera does not have permission to save the media to your camera roll.')
-        return
-      }
-      const newPath = await CameraRoll.save(`file://${path}`, {
-        type: type,
-      })
-      setPics([...pics, {
-        url: newPath,
-        id: Math.random(),
-      }])
-    } catch (e) {
-      const message = e instanceof Error ? e.message : JSON.stringify(e)
-      Alert.alert('Failed to save!', `An unexpected error occured while trying to save your photo. ${message}`)
-    }
-
-  }
-  const handleSubmit = ()=>{
-    console.log('submit')
-  }
 
 
   return (
@@ -373,13 +156,11 @@ function Scan(): React.JSX.Element {
         <Text>Scan Code</Text>
       </TouchableOpacity>
       <View style={{height: 20}}/>
-      {!hasFoundInfo ? 
       <>
         <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>Code</Text>
+          <Text style={styles.labelStyle}>Code <Text style={{color: 'red'}}>*</Text></Text>
           <TextInput
             style={styles.inputStyle}
-            readOnly={!isManulSearch}
             onChangeText={setCode}
             value={code}
             onBlur={handleCodeOnBlur}
@@ -389,7 +170,6 @@ function Scan(): React.JSX.Element {
           <Text style={styles.labelStyle}>Website Link</Text>
           <TextInput
             style={styles.inputStyle}
-            readOnly={!isManulSearch}
             onChangeText={setUrl}
             value={url}
           />
@@ -400,175 +180,6 @@ function Scan(): React.JSX.Element {
           disabled={!url}
         />
       </>
-      :
-      <>
-        <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>Case Number</Text>
-          <TextInput
-            style={styles.inputStyle}
-            keyboardType='numeric'
-            onChangeText={handleCaseNumberChange}
-            value={caseNumber + ''}
-            readOnly={!isManulInput.caseNumber}
-          />
-        </View>
-        <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>Item Number</Text>
-          <TextInput
-            style={styles.inputStyle}
-            keyboardType='numeric'
-            onChangeText={handleItemNumberChange}
-            value={itemNumber + ''}
-            readOnly={!isManulInput.itemNumber}
-          />
-        </View>
-        <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>Title</Text>
-          <TextInput
-            style={styles.inputStyle}
-            onChangeText={setTitle}
-            value={title}
-            readOnly={!isManulInput.title}
-          />
-        </View>
-        <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>Description</Text>
-          <TextInput
-            style={styles.inputStyle}
-            onChangeText={setDescription}
-            value={description}
-            readOnly={!isManulInput.description}
-          />
-        </View>
-        <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>B0 Code</Text>
-          <TextInput
-            style={styles.inputStyle}
-            onChangeText={setBCode}
-            value={bCode}
-            readOnly={!isManulInput.bCode}
-          />
-        </View>
-        <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>UPC Code</Text>
-          <TextInput
-            style={styles.inputStyle}
-            onChangeText={setUpcCode}
-            value={upcCode}
-            readOnly={!isManulInput.upcCode}
-          />
-        </View>
-        <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>EAN Code</Text>
-          <TextInput
-            style={styles.inputStyle}
-            onChangeText={setEanCode}
-            value={eanCode}
-            readOnly={!isManulInput.eanCode}
-          />
-        </View>
-        <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>FNSku Code</Text>
-          <TextInput
-            style={styles.inputStyle}
-            onChangeText={setFNSkuCode}
-            value={FNSkuCode}
-            readOnly={!isManulInput}
-          />
-        </View>
-        <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>LPN Code</Text>
-          <TextInput
-            style={styles.inputStyle}
-            onChangeText={setLpnCode}
-            value={lpnCode}
-            readOnly={!isManulInput.lpnCode}
-          />
-        </View>
-        <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>Pictures</Text>
-          <View style={{flexWrap: 'wrap', flexDirection: 'row'}}>
-            <ImagePicker
-              onChange={setPics}
-              files={pics}
-              selectable={true}
-              onAddImageClick={onAddImageClick}
-            />
-          </View>
-        </View>
-        <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>Status</Text>
-          <Select selectedValue={status} minWidth="200" accessibilityLabel="Choose Status" placeholder="Choose Status" _selectedItem={{bg: "teal.600", endIcon: <AntIcon name='check' size={5} />}} mt={1} onValueChange={setStatus}>
-            {statusData.map((item)=><Select.Item label={item.label} value={item.value} />)}
-          </Select>
-        </View>
-        {(status !== '' && status !== '0') ? <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>Status Note</Text>
-          <TextInput
-            style={styles.inputStyle}
-            onChangeText={setStatusNote}
-            value={statusNote}
-          />
-        </View> : null}
-        <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>Classification</Text>
-          <Select isDisabled={!isManulInput.classification} selectedValue={classification} minWidth="200" accessibilityLabel="Choose Class" placeholder="Choose Class" _selectedItem={{bg: "teal.600", endIcon: <AntIcon name='check' size={5} />}} mt={1} onValueChange={setClassification}>
-            {classificationData.map((item)=><Select.Item label={item.label} value={item.value} />)}
-          </Select>
-          {classification === 'Add New' && <TextInput
-            style={[styles.inputStyle, {marginTop: 10}]}
-            onChangeText={setNewClass}
-            value={newClass}
-          />}
-        </View>
-        <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>Size</Text>
-          {/* <Select isDisabled={!isManulInput.size} selectedValue={size} minWidth="200" accessibilityLabel="Choose Size" placeholder="Choose Size" _selectedItem={{bg: "teal.600", endIcon: <AntIcon name='check' size={5} />}} mt={1} onValueChange={setSize}>
-            {sizeData.map((item)=><Select.Item label={item.label} value={item.value} />)}
-          </Select>
-          {size === 'Add New' && <TextInput
-            style={[styles.inputStyle, {marginTop: 10}]}
-            onChangeText={setNewSize}
-            value={newSize}
-          />} */}
-          <TextInput
-            style={styles.inputStyle}
-            onChangeText={setSize}
-            value={size}
-            readOnly={!isManulInput.size}
-          />
-        </View>
-        <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>Color</Text>
-          {/* <Select isDisabled={!isManulInput.color} selectedValue={color} minWidth="200" accessibilityLabel="Choose Size" placeholder="Choose Color" _selectedItem={{bg: "teal.600", endIcon: <AntIcon name='check' size={5} />}} mt={1} onValueChange={setColor}>
-            {colorData.map((item)=><Select.Item label={item.label} value={item.value} />)}
-          </Select>
-          {color === 'Add New' && <TextInput
-            style={[styles.inputStyle, {marginTop: 10}]}
-            onChangeText={setNewColor}
-            value={newColor}
-          />} */}
-          <TextInput
-            style={styles.inputStyle}
-            onChangeText={setColor}
-            value={color}
-            readOnly={!isManulInput.color}
-          />
-        </View>
-        <View style={[styles.inputContainerStyle]}>
-          <Text style={styles.labelStyle}>Price</Text>
-          <TextInput
-            style={styles.inputStyle}
-            onChangeText={handlePriceChange}
-            value={price}
-            keyboardType='numeric'
-            readOnly={!isManulInput.price}
-          />
-        </View>
-        <View style={[styles.inputContainerStyle, {paddingBottom: 30}]}>
-          <Button title='Submit' onPress={handleSubmit}/>
-        </View>
-      </>}
     </ScrollView>
   );
 }

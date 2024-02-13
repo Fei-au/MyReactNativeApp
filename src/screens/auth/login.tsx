@@ -30,9 +30,8 @@ import { commonStyles } from '../../styles/styles';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Routes } from '../../Routes';
 import { useToast } from 'native-base';
-import { get_item_info_by_code, scrap_info_by_bo_code } from '../../services/inventory';
-import { axiosErrorHandler } from '../../utils/errorHandler';
 import axios, { AxiosError } from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 type tabType = {title : string};
@@ -71,7 +70,9 @@ function Login({navigation}: any): React.JSX.Element {
 		// 	toast.show({description: 'Password should be at least 6 characters.'});
 		// 	return;
 		// }
+		const user = {id: 1}
 		navigation.navigate('Home');
+		AsyncStorage.setItem('user', JSON.stringify(user))
 	}
 
 	const renderPage = ()=>{
@@ -130,29 +131,9 @@ function Login({navigation}: any): React.JSX.Element {
 		}
 	}
 
-	// const tabStyle = (title: any)=>{
-	// 	if(title === page){
-	// 		return {color: 'lightblue'};
-	// 	}else{
-	// 		return {};
-	// 	}
-	// }
 
-	const handleTest = async ()=>{
-		try{
-			// const res = await get_item_info_by_code('B00SCS5RZU');
-			const res2 = await scrap_info_by_bo_code('B00SCS5RZU');
-			console.log('res', res2);
-		}catch(err){
-			const error = err as Error | AxiosError;
-			if(axios.isAxiosError(error)){
-				axiosErrorHandler(error);
-			}else{
-				console.log(error.message);
-			}
-		}
-	}
-	
+
+
   return (
 		<SafeAreaView>
 			<StatusBar
@@ -172,9 +153,7 @@ function Login({navigation}: any): React.JSX.Element {
 					</View>
 				</View>
 				{renderPage()}
-				<View style={{height: 40}}>
-					<Button title='Test' onPress={handleTest}></Button>
-				</View>
+
 			</ScrollView>
 		</SafeAreaView>
   );

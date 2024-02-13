@@ -15,27 +15,50 @@ export const get_item_info_by_code = async (code)=>{
         if(data.status === 'success'){
             return data.data;
         }else if(data.status === 'not found'){
-            throw new NotFoundError('not found');
+            throw new NotFoundError(data.message);
         }
     }catch(err){
         throw new Error(err)
     }
 }
 
-export const scrap_info_by_bo_code = async (code)=>{
-    console.log('address', `${address}${app}/scrap_info_by_bo_code/${code}`);
+export const scrap_info_by_url = async (url)=>{
     try{
-        const res = await axios.get(`${address}${app}/scrap_info_by_bo_code/${code}`);
+        console.log('address', `${address}${app}/scrap_info_by_url/${url}`);
+        const {data} = await axios.get(`${address}${app}/scrap_info_by_url/${url}`);
+        if(data.status === 'success'){
+            return data.data;
+        }else if(data.status === 'not found'){
+            throw new NotFoundError(data.message);
+        }
     }catch(err){
         throw(err);
     }
 }
+
+export const add_new_item = async (item)=>{
+    try{
+        const {data} = await axios.post(`${address}${app}/add_new_item`, item);
+        return data;
+    }catch(err){
+        throw(err);
+    }
+}
+
+
 
 export const getStatus = async ()=>{
     console.log('address', `${address}${app}/status`);
     const {data} = await axios.get(`${address}${app}/status`);
     return data;
 }
+
+export const getCategory = async ()=>{
+    console.log('address', `${address}${app}/category`);
+    const {data} = await axios.get(`${address}${app}/category`);
+    return data;
+}
+
 
 
 
