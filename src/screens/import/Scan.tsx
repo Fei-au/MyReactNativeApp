@@ -116,6 +116,8 @@ function Scan(props): React.JSX.Element {
     }
     try{
       const item = await get_item_info_by_code(code);
+      console.log('item', item)
+      
       navigation.navigate('ItemEditor', {itemInfo: item});
     }catch(err : any){
       if(err instanceof NotFoundError){
@@ -137,6 +139,7 @@ function Scan(props): React.JSX.Element {
   const onPressStartScraping = async()=>{
     try{
       const item = await scrap_info_by_url(url);
+      console.log('item', item)
       navigation.navigate('ItemEditor', {itemInfo: item});
     }catch(err){
       toast.show({

@@ -70,7 +70,7 @@ function Login({navigation}: any): React.JSX.Element {
 		// 	toast.show({description: 'Password should be at least 6 characters.'});
 		// 	return;
 		// }
-		const user = {id: 1}
+		const user = {id: 9}
 		navigation.navigate('Home');
 		AsyncStorage.setItem('user', JSON.stringify(user))
 	}

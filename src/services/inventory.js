@@ -38,9 +38,14 @@ export const scrap_info_by_url = async (url)=>{
 
 export const add_new_item = async (item)=>{
     try{
-        const {data} = await axios.post(`${address}${app}/add_new_item`, item);
+        const {data} = await axios.post(`${address}${app}/add_new_item`, item, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+        });
         return data;
     }catch(err){
+        console.log(err)
         throw(err);
     }
 }

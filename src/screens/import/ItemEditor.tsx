@@ -1,7 +1,7 @@
 import { ImagePicker, Toast } from '@ant-design/react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import FormData from 'form-data';
 
 import {
   Alert,
@@ -22,16 +22,9 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 import { Modal, Select, useToast } from 'native-base';
 import AntIcon from 'react-native-vector-icons/AntDesign';
-import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { commonStyles } from '../../styles/styles';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Routes } from '../../Routes';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 import { add_new_item, get_item_info_by_code, getCategory, getStatus } from '../../services/inventory';
 import axios, { AxiosError } from 'axios';
-import { NotFoundError } from '../../utils/customizeError';
-import { normalErrorHandler } from '../../hooks/useErrorHandler';
 import { getBidStartPrice } from '../../utils/inventoryUtils';
 
 
@@ -104,14 +97,14 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
   const [eanCode, setEanCode] = useState(itemInfo.ean_code || '');
   const [FNSkuCode, setFNSkuCode] = useState(itemInfo.fnsku_code || '');
   const [lpnCode, setLpnCode] = useState(itemInfo.lpn_code || '');
-  const [pics, setPics] = useState<{}[]>(itemInfo.pics ? itemInfo.pics.map((ele: string)=>{return {id: Math.random(), url: ele}}): []); // Item pictures, get from 1. database 2. scraped 3. photos taken
+  const [pics, setPics] = useState<{}[]>(itemInfo.pics ? itemInfo.pics.map((ele)=>{return {id: ele.id || Math.random(), url: ele.url, has_saved: ele.has_saved}}): []); // Item pictures, get from 1. database 2. scraped 3. photos taken
   
   const [status, setStatus] = useState<string>('');
   const [statusData, setStatusData] = useState<SelectDataInterface[]>([]); // Status enum data, get from database
   const [statusNote, setStatusNote] = useState('');
   
-  const [category, setCategory] = useState(itemInfo.category.id || '');
-  const [classificationData, setClassificationData] = useState<SelectDataInterface[]>([{label: itemInfo.category.name, value: itemInfo.category.id}]);
+  const [category, setCategory] = useState(itemInfo.category?.id || '');
+  const [classificationData, setClassificationData] = useState<SelectDataInterface[]>(itemInfo.category? [{label: itemInfo.category.name, value: itemInfo.category.id}] : []);
 
   const [size, setSize] = useState(itemInfo.customize_size || null);
   const [color, setColor] = useState(itemInfo.customize_color || null);
@@ -129,6 +122,8 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
       try{
         const statuslist = await getStatus();
         const categlist = await getCategory();
+        console.log('statuslist', statuslist)
+        console.log('categlist', categlist)
         const storedValue = await AsyncStorage.getItem('case_number');
         const ur = await AsyncStorage.getItem('user');
         userRef.current = JSON.parse(ur as string);
@@ -136,9 +131,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         setStatusData(statuslist.map((ele)=> {return {label: ele.status, value: ele.id }}))
         setClassificationData(categlist.map((ele)=> {return {label: ele.name, value: ele.id }}))
     }catch(err){
-
       }
-
     }
     func();
   }, [])
@@ -153,6 +146,9 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
   }
 
   const handlePriceChange = (text: string)=>{
+    if(!text){
+      return;
+    }
     const cleanedText = text.replace(/[^0-9.]/g, '');
     const formattedText = `$${cleanedText}`;
     setPrice(formattedText);
@@ -160,6 +156,9 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
   }
 
   const handlePriceBlur = ()=>{
+    if(!price){
+      return;
+    }
     bidStartPriceRef.current = getBidStartPrice(parseFloat(price.substring(1,)))
   }
   
@@ -175,6 +174,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
   const afterTakenPhoto = async(photo)=>{
     const {path} = photo;
     const type = 'photo';
+    console.log('photo', photo)
     try {
       const hasPermission = await requestSavePermission()
       if (!hasPermission) {
@@ -187,6 +187,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
       setPics([...pics, {
         url: newPath,
         id: Math.random(),
+        has_saved: false,
       }])
     } catch (e) {
       const message = e instanceof Error ? e.message : JSON.stringify(e)
@@ -208,7 +209,6 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
     return true;
   }
   const handleSubmit = async ()=>{
-    console.log('submit')
     try{
       if(!requiredCheck(caseNumber, 'Case number')) return false;
       if(!requiredCheck(title, 'Title')) return false;
@@ -220,6 +220,28 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
       if(!requiredCheck(price, 'Price')) return false;
       if(!requiredCheck(shelf, 'Shelf')) return false;
       if(!requiredCheck(layer, 'Layer')) return false;
+      // fd.append('case_number', caseNumber);
+      // fd.append('item_number', itemNumber);
+      // fd.append('title', title);
+      // fd.append('description', description);
+      // fd.append('b_code', bCode);
+      // fd.append('upc_code', upcCode);
+      // fd.append('ean_code', eanCode);
+      // fd.append('fnsku_code', FNSkuCode);
+      // fd.append('lpn_code', lpnCode);
+      // fd.append('msrp_price', Number(price.substring(1,)));
+      // fd.append('bid_start_price', bidStartPriceRef.current);
+      // fd.append('status_id', status);
+      // fd.append('status_note', statusNote);
+      // fd.append('category_id', category);
+      // fd.append('shelf', shelf);
+      // fd.append('layer', layer);
+      // fd.append('customize_sie', size);
+      // fd.append('customize_color', color);
+      // fd.append('add_staff_id', userRef.current.id);
+
+      // fd.append('pics', pics.map(ele=>))
+      const fd = new FormData();
       const item = {
         case_number: caseNumber,
         item_number: itemNumber,
@@ -241,12 +263,24 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         customize_color: color,
         add_staff_id: userRef.current.id,
       }
-      const res = await add_new_item(item);
-      console.log('************shere')
-      console.log('res', res);
-      setItemNumber(res.item_number)
+      // fd.append('item', JSON.stringify({...item, name: 'item'}))
+      // fd.append('pics', pics.map((ele, index)=>{return {...ele, name: `${index}image`}}))
+      fd.append('pic', {uri: pics[0].url, name: `1image`, type: 'image/jpg'})
+      console.log('submit')
+      const res = await add_new_item(fd);
+      console.log('**********res', res);
+      Alert.alert(
+        'Item Detail',
+        `new item ${res.item_number} at location ${shelf} ${layer}`, 
+        [
+          {
+            text: 'OK',
+            onPress: ()=> navigation.navigate('Home'),
+          }
+        ]
+      )
     }catch(err){
-      
+      console.log(err)
     }
   }
 
@@ -270,7 +304,6 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
             keyboardType='numeric'
             onChangeText={handleCaseNumberChange}
             value={caseNumber + ''}
-            readOnly={!isManulInput.caseNumber}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -291,7 +324,6 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
             style={[styles.inputStyle, { height:60, textAlignVertical: 'top'}]}
             onChangeText={setTitle}
             value={title}
-            // readOnly={!isManulInput.title}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -302,7 +334,6 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
             style={[styles.inputStyle, { height:100, textAlignVertical: 'top'}]}
             onChangeText={setDescription}
             value={description}
-            // readOnly={!isManulInput.description}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -311,7 +342,6 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
             style={styles.inputStyle}
             onChangeText={setBCode}
             value={bCode}
-            readOnly={!isManulInput.bCode}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -320,7 +350,6 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
             style={styles.inputStyle}
             onChangeText={setUpcCode}
             value={upcCode}
-            // readOnly={!isManulInput.upcCode}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -329,7 +358,6 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
             style={styles.inputStyle}
             onChangeText={setEanCode}
             value={eanCode}
-            // readOnly={!isManulInput.eanCode}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -338,7 +366,6 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
             style={styles.inputStyle}
             onChangeText={setFNSkuCode}
             value={FNSkuCode}
-            // readOnly={!isManulInput}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -347,7 +374,6 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
             style={styles.inputStyle}
             onChangeText={setLpnCode}
             value={lpnCode}
-            // readOnly={!isManulInput.lpnCode}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -400,7 +426,6 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
             style={styles.inputStyle}
             onChangeText={setSize}
             value={size}
-            readOnly={!isManulInput.size}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -417,7 +442,6 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
             style={styles.inputStyle}
             onChangeText={setColor}
             value={color}
-            // readOnly={!isManulInput.color}
           />
         </View>
         <View style={[styles.inputContainerStyle]}>
