@@ -24,8 +24,12 @@ export const get_item_info_by_code = async (code)=>{
 
 export const scrap_info_by_url = async (url)=>{
     try{
-        console.log('address', `${address}${app}/scrap_info_by_url/${url}`);
-        const {data} = await axios.get(`${address}${app}/scrap_info_by_url/${url}`);
+        console.log('address', `${address}${app}/scrap_info_by_url`);
+        const {data} = await axios.get(`${address}${app}/scrap_info_by_url`,{
+            params:{
+                url: url
+            }
+        });
         if(data.status === 'success'){
             return data.data;
         }else if(data.status === 'not found'){
@@ -39,6 +43,20 @@ export const scrap_info_by_url = async (url)=>{
 export const add_new_item = async (item)=>{
     try{
         const {data} = await axios.post(`${address}${app}/add_new_item`, item, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+        });
+        return data;
+    }catch(err){
+        console.log(err)
+        throw(err);
+    }
+}
+
+export const image_upload = async(image)=>{
+    try{
+        const {data} = await axios.post(`${address}${app}/image_upload`, image, {
             headers: {
                 'Content-Type': 'multipart/form-data',
               },

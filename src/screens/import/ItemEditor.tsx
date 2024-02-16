@@ -23,7 +23,7 @@ import {
 import { Modal, Select, useToast } from 'native-base';
 import AntIcon from 'react-native-vector-icons/AntDesign';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
-import { add_new_item, get_item_info_by_code, getCategory, getStatus } from '../../services/inventory';
+import { add_new_item, get_item_info_by_code, getCategory, getStatus, image_upload } from '../../services/inventory';
 import axios, { AxiosError } from 'axios';
 import { getBidStartPrice } from '../../utils/inventoryUtils';
 
@@ -254,20 +254,29 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         lpn_code: lpnCode,
         msrp_price: Number(price.substring(1,)),
         bid_start_price: bidStartPriceRef.current,
-        status_id: status,
+        status: parseInt(status),
         status_note: statusNote,
-        category_id: category,
+        category: parseInt(category),
         shelf: shelf,
         layer: layer,
         customize_sie: size,
         customize_color: color,
         add_staff_id: userRef.current.id,
       }
-      // fd.append('item', JSON.stringify({...item, name: 'item'}))
+      fd.append('item', JSON.stringify(item))
       // fd.append('pics', pics.map((ele, index)=>{return {...ele, name: `${index}image`}}))
-      fd.append('pic', {uri: pics[0].url, name: `1image`, type: 'image/jpg'})
+      // fd.append('images', pics.map((ele, index)=>{return {uri: ele.url, name: `${index}image`, type: 'image/jpg'}})
+      pics.forEach((ele, index)=>{
+        console.log(typeof ele.has_saved)
+        if(ele.has_saved){
+          fd.append('img_id', ele.id)
+        }else{
+          fd.append('image', {uri: ele.url, name: `${index+1}img.jpg`, type: 'image/jpg'})
+        }
+      })
       console.log('submit')
       const res = await add_new_item(fd);
+      // const res = await image_upload(fd);
       console.log('**********res', res);
       Alert.alert(
         'Item Detail',
