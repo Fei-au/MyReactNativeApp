@@ -16,6 +16,7 @@ import { NativeBaseProvider} from "native-base";
 import { Camera } from 'react-native-vision-camera';
 import { CodeScannerPage } from './src/screens/import/CodeScannerPage'; 
 import { CameraPage } from './src/screens/import/CameraPage';
+import TestCamera from './src/screens/import/CameraTest';
 
 const Stack = createNativeStackNavigator();
 
@@ -52,6 +53,7 @@ function App(): React.JSX.Element {
             options={{title: 'Start Scan'}}
           />
           <Stack.Screen name="CameraPage" component={CameraPage} />
+          {/* <Stack.Screen name="TestCameraPage" component={TestCamera} /> */}
         </Stack.Navigator>
       </NavigationContainer>
     </NativeBaseProvider>

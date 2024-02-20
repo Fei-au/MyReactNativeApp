@@ -63,7 +63,7 @@ const _CaptureButton: React.FC<Props> = ({
     () => ({
       qualityPrioritization: 'speed',
       flash: flash,
-      quality: 90,
+      quality: 85,
       enableShutterSound: false,
     }),
     [flash],
@@ -74,7 +74,6 @@ const _CaptureButton: React.FC<Props> = ({
   const takePhoto = useCallback(async () => {
     try {
       if (camera.current == null) throw new Error('Camera ref is null!')
-
       console.log('Taking photo...')
       const photo = await camera.current.takePhoto(takePhotoOptions)
       onMediaCaptured(photo, 'photo')
@@ -88,17 +87,17 @@ const _CaptureButton: React.FC<Props> = ({
   //   cancelAnimation(recordingProgress)
   //   console.log('stopped recording video!')
   // }, [recordingProgress])
-  const stopRecording = useCallback(async () => {
-    try {
-      if (camera.current == null) throw new Error('Camera ref is null!')
+  // const stopRecording = useCallback(async () => {
+  //   try {
+  //     if (camera.current == null) throw new Error('Camera ref is null!')
 
-      console.log('calling stopRecording()...')
-      await camera.current.stopRecording()
-      console.log('called stopRecording()!')
-    } catch (e) {
-      console.error('failed to stop recording!', e)
-    }
-  }, [camera])
+  //     console.log('calling stopRecording()...')
+  //     await camera.current.stopRecording()
+  //     console.log('called stopRecording()!')
+  //   } catch (e) {
+  //     console.error('failed to stop recording!', e)
+  //   }
+  // }, [camera])
   // const startRecording = useCallback(() => {
   //   try {
   //     if (camera.current == null) throw new Error('Camera ref is null!')

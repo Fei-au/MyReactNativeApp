@@ -1,4 +1,4 @@
-import { ImagePicker, Toast } from '@ant-design/react-native';
+import { ActivityIndicator, ImagePicker, Toast } from '@ant-design/react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -91,6 +91,7 @@ function Scan(props): React.JSX.Element {
   const [code, setCode] = useState('');
   // const [isCodeReadOnly, setIsCodeReadOnly] = useState(true); // if not capture barcode or manually go to input mode
   const [url, setUrl] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
@@ -115,9 +116,10 @@ function Scan(props): React.JSX.Element {
       return;
     }
     try{
+      setIsLoading(true);
       const item = await get_item_info_by_code(code);
+      setIsLoading(false);
       console.log('item', item)
-      
       navigation.navigate('ItemEditor', {itemInfo: item});
     }catch(err : any){
       if(err instanceof NotFoundError){
@@ -134,8 +136,6 @@ function Scan(props): React.JSX.Element {
     func();
   }
 
-
-
   const onPressStartScraping = async()=>{
     try{
       const item = await scrap_info_by_url(url);
@@ -149,12 +149,10 @@ function Scan(props): React.JSX.Element {
   }
 
 
-
-
   return (
     <ScrollView style={[{backgroundColor: backgroundStyle.backgroundColor}, styles.scrollViewStyle]}>
       {/* Scan button container */}
-      <TouchableOpacity style={commonStyles.center} onPress={handleScan}>
+      <TouchableOpacity style={commonStyles.center} onPress={!isLoading ? handleScan : ()=>{}} disabled={isLoading}>
         <MaterialIcon name='barcode-scan' size={50}/>
         <Text>Scan Code</Text>
       </TouchableOpacity>
@@ -167,6 +165,7 @@ function Scan(props): React.JSX.Element {
             onChangeText={setCode}
             value={code}
             onBlur={handleCodeOnBlur}
+            readOnly={isLoading}
           />
         </View>
         <View style={styles.inputContainerStyle}>
@@ -175,13 +174,16 @@ function Scan(props): React.JSX.Element {
             style={styles.inputStyle}
             onChangeText={setUrl}
             value={url}
+            readOnly={isLoading}
           />
         </View>
         <Button
           onPress={onPressStartScraping}
           title="Start Scraping"
-          disabled={!url}
+          disabled={!url || isLoading}
         />
+        <ActivityIndicator animating={isLoading} />
+
       </>
     </ScrollView>
   );

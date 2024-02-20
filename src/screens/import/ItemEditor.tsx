@@ -108,10 +108,10 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
 
   const [size, setSize] = useState(itemInfo.customize_size || null);
   const [color, setColor] = useState(itemInfo.customize_color || null);
-  const [price, setPrice] = useState(itemInfo.price || null);
+  const [price, setPrice] = useState(itemInfo.msrp_price ? '$' + itemInfo.msrp_price : null);
   const [shelf, setSelf] = useState('');
   const [layer, setLayer] = useState('');
-  const bidStartPriceRef = useRef(itemInfo.price ? getBidStartPrice(price) : null);
+  const bidStartPriceRef = useRef(itemInfo.bid_start_price + '' || null);
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
@@ -277,6 +277,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
       })
       console.log('submit')
       const res = await add_new_item(fd);
+      await AsyncStorage.setItem('case_number', caseNumber);
       // const res = await image_upload(fd);
       console.log('**********res', res);
       Alert.alert(

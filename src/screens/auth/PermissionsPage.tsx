@@ -32,6 +32,7 @@ function PermissionsPage({ navigation } : any): React.JSX.Element{
 
     if (permission === 'denied') await Linking.openSettings()
     setCameraPermissionStatus(permission)
+    navigation.navigate('Login')
   }, [])
 
   useEffect(() => {
