@@ -18,6 +18,7 @@ import {
 	TextInput,
 	TouchableOpacity,
 	Button,
+	Alert,
 } from 'react-native';
 
 import { Checkbox, Tabs, Toast } from '@ant-design/react-native';
@@ -32,6 +33,7 @@ import { Routes } from '../../Routes';
 import { useToast } from 'native-base';
 import axios, { AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { login } from '../../services/auth';
 
 
 type tabType = {title : string};
@@ -61,18 +63,26 @@ function Login({navigation}: any): React.JSX.Element {
 		setPage(tab.title);
 	}
 
-	const handleLogin = ()=>{
-		// if(!account){
-		// 	toast.show({description: 'Please enter email address or username.'});
-		// 	return;
-		// }
-		// if(password.length < 6){
-		// 	toast.show({description: 'Password should be at least 6 characters.'});
-		// 	return;
-		// }
-		const user = {id: 9}
-		navigation.navigate('Home');
-		AsyncStorage.setItem('user', JSON.stringify(user))
+	const handleLogin = async()=>{
+		if(!account){
+			toast.show({description: 'Please enter email address or username.'});
+			return;
+		}
+		if(password.length < 6){
+			toast.show({description: 'Password should be at least 6 characters.'});
+			return;
+		}
+		try{
+			const id = await login({
+				username: account,
+				password: password,
+			})
+			navigation.navigate('Home');
+			AsyncStorage.setItem('user', JSON.stringify({id: id}))
+		}catch(err){
+			Alert.alert('login failed');
+		}
+
 	}
 
 	const renderPage = ()=>{
@@ -113,7 +123,7 @@ function Login({navigation}: any): React.JSX.Element {
 							{/* Remember password */}
 							<View style={styles.passwordManager}>
 								<Checkbox style={{marginLeft: 0}} checked={remPsw} onChange={(e: { target: { checked: boolean } })=>setRemPsw(e.target.checked)}>Remember password</Checkbox>
-								<Text style={commonStyles.link}>Forget password</Text>
+								{/* <Text style={commonStyles.link}>Forget password</Text> */}
 							</View>
 							{/* Login */}
 							<View style={{height: 40}}></View>
@@ -148,9 +158,7 @@ function Login({navigation}: any): React.JSX.Element {
 					By signing in you are agreeing our <Text style={commonStyles.link}>Term and privacy policy</Text>
 				</Section>
 				<View style={[commonStyles.center, {marginTop: 20}]}>
-					<View style={{width: '50%'}}>
-						<Tabs tabs={tabs} tabBarActiveTextColor='#0386D0' page={page} onTabClick={handleTabClick}/>
-					</View>
+						{/* <Tabs tabs={tabs} tabBarActiveTextColor='#0386D0' page={page} onChange={handleTabClick}/> */}
 				</View>
 				{renderPage()}
 

@@ -263,6 +263,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         customize_color: color,
         add_staff_id: userRef.current.id,
       }
+      console.log('item', item)
       fd.append('item', JSON.stringify(item))
       // fd.append('pics', pics.map((ele, index)=>{return {...ele, name: `${index}image`}}))
       // fd.append('images', pics.map((ele, index)=>{return {uri: ele.url, name: `${index}image`, type: 'image/jpg'}})

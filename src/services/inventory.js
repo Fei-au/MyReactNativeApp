@@ -1,17 +1,13 @@
 import axios from "axios"
-import { BACKEND_ADDRESS } from '@env';
 import { NotFoundError } from "../utils/customizeError";
+import { APIURL } from "../Constants";
 
-// const address = BACKEND_ADDRESS;
-const address = 'http://192.168.2.79:8000/';
 const app = 'inventory';
-console.log('address', address);
-console.log('address', process.env);
 
 export const get_item_info_by_code = async (code)=>{
     try{
-        console.log('address', `${address}${app}/get_item_info_by_code/${code}`)
-        const {data} = await axios.get(`${address}${app}/get_item_info_by_code/${code}`);
+        console.log('APIURL', `${APIURL}${app}/get_item_info_by_code/${code}`)
+        const {data} = await axios.get(`${APIURL}${app}/get_item_info_by_code/${code}`);
         if(data.status === 'success'){
             return data.data;
         }else if(data.status === 'not found'){
@@ -24,8 +20,8 @@ export const get_item_info_by_code = async (code)=>{
 
 export const scrap_info_by_url = async (url)=>{
     try{
-        console.log('address', `${address}${app}/scrap_info_by_url`);
-        const {data} = await axios.get(`${address}${app}/scrap_info_by_url`,{
+        console.log('APIURL', `${APIURL}${app}/scrap_info_by_url`);
+        const {data} = await axios.get(`${APIURL}${app}/scrap_info_by_url`,{
             params:{
                 url: url
             }
@@ -42,7 +38,7 @@ export const scrap_info_by_url = async (url)=>{
 
 export const add_new_item = async (item)=>{
     try{
-        const {data} = await axios.post(`${address}${app}/add_new_item`, item, {
+        const {data} = await axios.post(`${APIURL}${app}/add_new_item`, item, {
             headers: {
                 'Content-Type': 'multipart/form-data',
               },
@@ -56,7 +52,7 @@ export const add_new_item = async (item)=>{
 
 export const image_upload = async(image)=>{
     try{
-        const {data} = await axios.post(`${address}${app}/image_upload`, image, {
+        const {data} = await axios.post(`${APIURL}${app}/image_upload`, image, {
             headers: {
                 'Content-Type': 'multipart/form-data',
               },
@@ -71,14 +67,14 @@ export const image_upload = async(image)=>{
 
 
 export const getStatus = async ()=>{
-    console.log('address', `${address}${app}/status`);
-    const {data} = await axios.get(`${address}${app}/status`);
+    console.log('APIURL', `${APIURL}${app}/status`);
+    const {data} = await axios.get(`${APIURL}${app}/status`);
     return data;
 }
 
 export const getCategory = async ()=>{
-    console.log('address', `${address}${app}/category`);
-    const {data} = await axios.get(`${address}${app}/category`);
+    console.log('APIURL', `${APIURL}${app}/category`);
+    const {data} = await axios.get(`${APIURL}${app}/category`);
     return data;
 }
 
