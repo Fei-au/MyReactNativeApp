@@ -3,12 +3,12 @@ import { useCallback, useRef, useState } from 'react'
 import { Alert, AlertButton, Linking, StyleSheet, View } from 'react-native'
 import { Code, useCameraDevice, useCodeScanner } from 'react-native-vision-camera'
 import { Camera } from 'react-native-vision-camera'
-import { CONTENT_SPACING, CONTROL_BUTTON_SIZE, SAFE_AREA_PADDING } from '../../Constants'
-import { useIsForeground } from '../../hooks/useIsForeground'
-import { StatusBarBlurBackground } from '../../components/StatusBarBlurBackground'
+import { CONTENT_SPACING, CONTROL_BUTTON_SIZE, SAFE_AREA_PADDING } from '../Constants'
+import { useIsForeground } from '../hooks/useIsForeground'
+import { StatusBarBlurBackground } from './StatusBarBlurBackground'
 import { PressableOpacity } from 'react-native-pressable-opacity'
 import IonIcon from 'react-native-vector-icons/Ionicons'
-import type { Routes } from '../../Routes'
+import type { Routes } from '../Routes'
 import type { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { useIsFocused } from '@react-navigation/core'
 import { useNavigation } from '@react-navigation/native';
@@ -51,7 +51,7 @@ export function CodeScannerPage({route, navigation}: any): React.ReactElement {
   const isShowingAlert = useRef(false)
   const onCodeScanned = useCallback((codes: Code[]) => {
     getBarCode(codes.map(ele=>ele.value));
-    navigation.goBack();
+    // navigation.goBack();
     // console.log(`Scanned ${codes.length} codes:`, codes)
     // console.log(`Scanned ${codes.length} codes:`, codes)
     // const value = codes[0]?.value
@@ -92,7 +92,7 @@ export function CodeScannerPage({route, navigation}: any): React.ReactElement {
       </View>
 
       {/* Back Button */}
-      <PressableOpacity style={styles.backButton} onPress={()=>{getBarCode([]); navigation.goBack();}}>
+      <PressableOpacity style={styles.backButton} onPress={()=>{navigation.goBack();}}>
         <IonIcon name="chevron-back" color="white" size={35} />
       </PressableOpacity>
     </View>

@@ -18,4 +18,13 @@ export const commonStyles = StyleSheet.create({
         color: '#0386D0',
         textDecorationLine: 'underline',
     },
+	row: {
+		flexDirection: 'row',
+	},
+	inputWithIcon:{
+		flex: 6
+	},
+	inputButtonStyle:{
+		flex: 1,
+	}
 });

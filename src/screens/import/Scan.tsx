@@ -1,6 +1,7 @@
-import { ActivityIndicator, ImagePicker, Toast } from '@ant-design/react-native';
+import { ImagePicker, Toast } from '@ant-design/react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome'
 
 
 import {
@@ -15,6 +16,10 @@ import {
   TouchableOpacity,
   useColorScheme,
   View,
+  NativeSyntheticEvent,
+  TextInputKeyPressEventData,
+  TextInputSubmitEditingEventData,
+  ActivityIndicator,
 } from 'react-native';
 
 import {
@@ -24,7 +29,7 @@ import { Select, useToast } from 'native-base';
 import AntIcon from 'react-native-vector-icons/AntDesign';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { commonStyles } from '../../styles/styles';
-import { useNavigation } from '@react-navigation/native';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Routes } from '../../Routes';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
@@ -32,6 +37,9 @@ import { get_item_info_by_code, getStatus, scrap_info_by_url } from '../../servi
 import axios, { AxiosError } from 'axios';
 import { NotFoundError } from '../../utils/customizeError';
 import useErrorHandler  from '../../hooks/useErrorHandler';
+import Clipboard from '@react-native-clipboard/clipboard';
+import { getUrl } from '../../utils/regUtils';
+
 
 
 interface CaseNumParam {
@@ -59,6 +67,10 @@ interface IsManulInputParams {
   price?: boolean,
 }
 
+type keyPressProps = {
+  key: string
+}
+
 // type Props = NativeStackScreenProps<Routes, 'CodeScannerPage'>
 
 const requestSavePermission = async (): Promise<boolean> => {
@@ -82,16 +94,17 @@ const requestSavePermission = async (): Promise<boolean> => {
   return hasPermission
 }
 
-function Scan(props): React.JSX.Element {
+function Scan(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   const showError = useErrorHandler();
   // Code, url used before scraping
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<Routes>>();
   const toast = useToast();
   const [code, setCode] = useState('');
   // const [isCodeReadOnly, setIsCodeReadOnly] = useState(true); // if not capture barcode or manually go to input mode
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
@@ -109,6 +122,7 @@ function Scan(props): React.JSX.Element {
       setCode(barcodes[0]);
       func();
     }
+    navigation.goBack()
   }
 
   const func = async ()=>{
@@ -122,6 +136,7 @@ function Scan(props): React.JSX.Element {
       console.log('item', item)
       navigation.navigate('ItemEditor', {itemInfo: item});
     }catch(err : any){
+      setIsLoading(false);
       if(err instanceof NotFoundError){
         toast.show({
           description: 'No item info found in database, please input B0 code or Amz website link',
@@ -138,8 +153,9 @@ function Scan(props): React.JSX.Element {
 
   const onPressStartScraping = async()=>{
     try{
+      setIsLoading(true)
       const item = await scrap_info_by_url(url);
-      console.log('item', item)
+      setIsLoading(false)
       navigation.navigate('ItemEditor', {itemInfo: item});
     }catch(err){
       toast.show({
@@ -148,6 +164,34 @@ function Scan(props): React.JSX.Element {
     }
   }
 
+  const handleKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>)=>{
+    if(e.nativeEvent.key === 'Backspace'){
+      setIsClearing(true)
+    }
+  }
+
+  const handleChangeUrl = (str: string)=>{
+    if(isClearing){
+      setUrl('')
+      setIsClearing(false)
+    }else{
+      setUrl(str)
+    }
+  }
+
+  const handleSubmitUrl = (e: NativeSyntheticEvent<TextInputSubmitEditingEventData>)=>{
+    onPressStartScraping();
+  }
+
+  const fetchCopiedText = async () => {
+    const text = await Clipboard.getString();
+    const u = getUrl(text);
+    if(u){
+      setUrl(u);
+    }else{
+      setUrl(text)
+    }
+  };
 
   return (
     <ScrollView style={[{backgroundColor: backgroundStyle.backgroundColor}, styles.scrollViewStyle]}>
@@ -170,20 +214,28 @@ function Scan(props): React.JSX.Element {
         </View>
         <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Website Link</Text>
-          <TextInput
-            style={styles.inputStyle}
-            onChangeText={setUrl}
-            value={url}
-            readOnly={isLoading}
-          />
+          <View style={commonStyles.row}>
+            <TextInput
+              style={[styles.inputStyle, commonStyles.inputWithIcon]}
+              onChangeText={handleChangeUrl}
+              value={url}
+              onKeyPress={handleKeyPress}
+              onSubmitEditing={handleSubmitUrl}
+              readOnly={isLoading}
+            />
+            <TouchableOpacity onPress={fetchCopiedText} style={[commonStyles.inputButtonStyle, commonStyles.center]}>
+              <FontAwesomeIcon name='paste' size={25}/>
+            </TouchableOpacity>
+          </View>
         </View>
         <Button
           onPress={onPressStartScraping}
           title="Start Scraping"
           disabled={!url || isLoading}
         />
-        <ActivityIndicator animating={isLoading} />
-
+        <View style={{height: 100, flexDirection: 'row', justifyContent: 'center', alignItems:'center'}}>
+          <ActivityIndicator animating={isLoading} size={'large'}/>
+        </View>
       </>
     </ScrollView>
   );

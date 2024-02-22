@@ -1,4 +1,4 @@
-import { ImagePicker, Toast } from '@ant-design/react-native';
+import { ActivityIndicator, ImagePicker, Toast } from '@ant-design/react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FormData from 'form-data';
@@ -20,12 +20,15 @@ import {
 import {
   Colors,
 } from 'react-native/Libraries/NewAppScreen';
-import { Modal, Select, useToast } from 'native-base';
+import { Flex, Modal, Select, useToast } from 'native-base';
 import AntIcon from 'react-native-vector-icons/AntDesign';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 import { add_new_item, get_item_info_by_code, getCategory, getStatus, image_upload } from '../../services/inventory';
 import axios, { AxiosError } from 'axios';
 import { getBidStartPrice } from '../../utils/inventoryUtils';
+import Scanner from '../../components/Scanner';
+import { PhotoFile, VideoFile } from 'react-native-vision-camera';
+import { commonStyles } from '../../styles/styles';
 
 
 interface CaseNumParam {
@@ -37,21 +40,42 @@ interface SelectDataInterface {
   value: string,
 }
 
+type statusDataType = {
+  id: string
+  status: string
+}
+
+type categoryDataType = {
+  id: string,
+  name: string,
+}
 interface IsManulInputParams {
   caseNumber?: boolean,
   itemNumber?: boolean,
   title?: boolean,
   description?: boolean,
   bCode?: boolean,
-  upcCode?: boolean,
-  eanCode?: boolean,
-  FNSkuCode?: boolean,
-  lpnCode?: boolean,
+  upcEanCode?: boolean,
+  // upcCode?: boolean,
+  // eanCode?: boolean,
+  // FNSkuCode?: boolean,
+  // lpnCode?: boolean,
   category?: boolean,
   size?: boolean,
   color?: boolean,
   price?: boolean,
 }
+type picType={
+  has_saved: boolean,
+  url: string,
+  id: number,
+}
+
+type userType = {
+  user_id?: number,
+  staff_id?: number,
+}
+
 
 // type Props = NativeStackScreenProps<Routes, 'CodeScannerPage'>
 
@@ -79,7 +103,8 @@ const requestSavePermission = async (): Promise<boolean> => {
 function ItemEditor({route, navigation}: any): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   // Code, url used before scraping
-  const {itemInfo} = route.params;
+  // const {itemInfo} = route.params;
+  const [itemInfo, setItemInfo] = useState(route.params.itemInfo);
   const toast = useToast();
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -93,11 +118,12 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
   const [description, setDescription] = useState(itemInfo.description || '');
 
   const [bCode, setBCode] = useState(itemInfo.b_code || '');
-  const [upcCode, setUpcCode] = useState(itemInfo.upc_code || '');
-  const [eanCode, setEanCode] = useState(itemInfo.ean_code || '');
-  const [FNSkuCode, setFNSkuCode] = useState(itemInfo.fnsku_code || '');
-  const [lpnCode, setLpnCode] = useState(itemInfo.lpn_code || '');
-  const [pics, setPics] = useState<{}[]>(itemInfo.pics ? itemInfo.pics.map((ele)=>{return {id: ele.id || Math.random(), url: ele.url, has_saved: ele.has_saved}}): []); // Item pictures, get from 1. database 2. scraped 3. photos taken
+  const [upcEanCode, setUpcEanCode] = useState(itemInfo.upc_ean_code || '');
+  // const [upcCode, setUpcCode] = useState(itemInfo.upc_code || '');
+  // const [eanCode, setEanCode] = useState(itemInfo.ean_code || '');
+  // const [FNSkuCode, setFNSkuCode] = useState(itemInfo.fnsku_code || '');
+  // const [lpnCode, setLpnCode] = useState(itemInfo.lpn_code || '');
+  const [pics, setPics] = useState<{}[]>(itemInfo.pics ? itemInfo.pics.map((ele:picType)=>{return {id: ele.id || Math.random(), url: ele.url, has_saved: ele.has_saved}}): []); // Item pictures, get from 1. database 2. scraped 3. photos taken
   
   const [status, setStatus] = useState<string>('');
   const [statusData, setStatusData] = useState<SelectDataInterface[]>([]); // Status enum data, get from database
@@ -106,16 +132,18 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
   const [category, setCategory] = useState(itemInfo.category?.id || '');
   const [classificationData, setClassificationData] = useState<SelectDataInterface[]>(itemInfo.category? [{label: itemInfo.category.name, value: itemInfo.category.id}] : []);
 
-  const [size, setSize] = useState(itemInfo.customize_size || null);
-  const [color, setColor] = useState(itemInfo.customize_color || null);
-  const [price, setPrice] = useState(itemInfo.msrp_price ? '$' + itemInfo.msrp_price : null);
-  const [shelf, setSelf] = useState('');
-  const [layer, setLayer] = useState('');
+  const [size, setSize] = useState(itemInfo.customize_size || '');
+  const [color, setColor] = useState(itemInfo.customize_color || '');
+  const [price, setPrice] = useState(itemInfo.msrp_price ? '$' + itemInfo.msrp_price : undefined);
+  const [location, setLocation] = useState('');
+  // const [shelf, setSelf] = useState('');
+  // const [layer, setLayer] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const bidStartPriceRef = useRef(itemInfo.bid_start_price + '' || null);
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
-  const userRef = useRef(null);
+  const userRef = useRef<userType>({});
 
   useEffect(()=>{
     const func = async ()=>{
@@ -128,13 +156,27 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         const ur = await AsyncStorage.getItem('user');
         userRef.current = JSON.parse(ur as string);
         setCaseNumber(storedValue || '');
-        setStatusData(statuslist.map((ele)=> {return {label: ele.status, value: ele.id }}))
-        setClassificationData(categlist.map((ele)=> {return {label: ele.name, value: ele.id }}))
+        setStatusData(statuslist.map((ele: statusDataType)=> {return {label: ele.status, value: ele.id }}))
+        setClassificationData(categlist.map((ele: categoryDataType)=> {return {label: ele.name, value: ele.id }}))
     }catch(err){
       }
     }
     func();
   }, [])
+
+  // useEffect(()=>{
+  //   setBCode(route.params?.b_code)
+  // }, [route.params?.b_code])
+
+  // useEffect(()=>{
+  //   setUpcEanCode(route.params?.upc_ean_code)
+  // }, [route.params?.upc_ean_code])
+
+  // useEffect(()=>{
+  //   setLocation(route.params?.location)
+  // }, [route.params?.location])
+
+
 
   const handleCaseNumberChange=(text : string)=>{
     const numericText = text.replace(/[^0-9]/g, '');
@@ -152,14 +194,14 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
     const cleanedText = text.replace(/[^0-9.]/g, '');
     const formattedText = `$${cleanedText}`;
     setPrice(formattedText);
-    bidStartPriceRef.current = getBidStartPrice(parseFloat(cleanedText))
+    bidStartPriceRef.current = getBidStartPrice(parseFloat(cleanedText)) + ''
   }
 
   const handlePriceBlur = ()=>{
     if(!price){
       return;
     }
-    bidStartPriceRef.current = getBidStartPrice(parseFloat(price.substring(1,)))
+    bidStartPriceRef.current = getBidStartPrice(parseFloat(price.substring(1,))) + ''
   }
   
 
@@ -171,7 +213,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
     navigation.navigate('CameraPage', {afterTakenPhoto: afterTakenPhoto});
   }
 
-  const afterTakenPhoto = async(photo)=>{
+  const afterTakenPhoto = async(photo: PhotoFile | VideoFile)=>{
     const {path} = photo;
     const type = 'photo';
     console.log('photo', photo)
@@ -217,9 +259,10 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
       if(!requiredCheck(status, 'Status')) return false;
       if(status !== '1' && !requiredCheck(statusNote, 'Status note')) return false;
       if(!requiredCheck(category, 'category')) return false;
-      if(!requiredCheck(price, 'Price')) return false;
-      if(!requiredCheck(shelf, 'Shelf')) return false;
-      if(!requiredCheck(layer, 'Layer')) return false;
+      if(!requiredCheck(price || '', 'Price')) return false;
+      if(!requiredCheck(location, 'Location')) return false;
+      // if(!requiredCheck(shelf, 'Shelf')) return false;
+      // if(!requiredCheck(layer, 'Layer')) return false;
       // fd.append('case_number', caseNumber);
       // fd.append('item_number', itemNumber);
       // fd.append('title', title);
@@ -238,7 +281,6 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
       // fd.append('layer', layer);
       // fd.append('customize_sie', size);
       // fd.append('customize_color', color);
-      // fd.append('add_staff_id', userRef.current.id);
 
       // fd.append('pics', pics.map(ele=>))
       const fd = new FormData();
@@ -248,26 +290,28 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         title: title,
         description: description,
         b_code: bCode,
-        upc_code: upcCode,
-        ean_code: eanCode,
-        fnsku_code: FNSkuCode,
-        lpn_code: lpnCode,
-        msrp_price: Number(price.substring(1,)),
+        upc_ean_code: upcEanCode,
+        // upc_code: upcCode,
+        // ean_code: eanCode,
+        // fnsku_code: FNSkuCode,
+        // lpn_code: lpnCode,
+        msrp_price: Number(price?.substring(1,)),
         bid_start_price: bidStartPriceRef.current,
         status: parseInt(status),
         status_note: statusNote,
         category: parseInt(category),
-        shelf: shelf,
-        layer: layer,
-        customize_sie: size,
+        location: location,
+        // shelf: shelf,
+        // layer: layer,
+        customize_size: size + '',
         customize_color: color,
-        add_staff_id: userRef.current.id,
+        add_staff: 9 || userRef.current.staff_id,
       }
       console.log('item', item)
       fd.append('item', JSON.stringify(item))
       // fd.append('pics', pics.map((ele, index)=>{return {...ele, name: `${index}image`}}))
       // fd.append('images', pics.map((ele, index)=>{return {uri: ele.url, name: `${index}image`, type: 'image/jpg'}})
-      pics.forEach((ele, index)=>{
+      pics.forEach((ele: any, index)=>{
         console.log(typeof ele.has_saved)
         if(ele.has_saved){
           fd.append('img_id', ele.id)
@@ -282,7 +326,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
       console.log('**********res', res);
       Alert.alert(
         'Item Detail',
-        `new item ${res.item_number} at location ${shelf} ${layer}`, 
+        `new item ${res.item_number} at location ${location}`, 
         [
           {
             text: 'OK',
@@ -319,13 +363,15 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         </View>
         <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Item Number</Text>
-          <TextInput
-            style={styles.inputStyle}
-            keyboardType='numeric'
-            onChangeText={handleItemNumberChange}
-            value={itemNumber + ''}
-            readOnly={!isManulInput.itemNumber}
-          />
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.inputStyle, styles.inputWithIcon]}
+              keyboardType='numeric'
+              onChangeText={handleItemNumberChange}
+              value={itemNumber + ''}
+            />
+            <Scanner scannerStyle={styles.scannerStyle} setCode={setItemNumber}/>
+          </View>
         </View>
         <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Title<Text style={{color: 'red'}}>*</Text></Text>
@@ -349,13 +395,27 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         </View>
         <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>B0 Code</Text>
-          <TextInput
-            style={styles.inputStyle}
-            onChangeText={setBCode}
-            value={bCode}
-          />
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.inputStyle, styles.inputWithIcon]}
+              onChangeText={setBCode}
+              value={bCode}
+            />
+            <Scanner scannerStyle={styles.scannerStyle} setCode={setBCode}/>
+          </View>
         </View>
         <View style={styles.inputContainerStyle}>
+          <Text style={styles.labelStyle}>Number Code</Text>
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.inputStyle, styles.inputWithIcon]}
+              onChangeText={setUpcEanCode}
+              value={upcEanCode}
+            />
+            <Scanner scannerStyle={styles.scannerStyle} setCode={setUpcEanCode}/>
+          </View>
+        </View>
+        {/* <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>UPC Code</Text>
           <TextInput
             style={styles.inputStyle}
@@ -386,7 +446,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
             onChangeText={setLpnCode}
             value={lpnCode}
           />
-        </View>
+        </View> */}
         <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Pictures<Text style={{color: 'red'}}>*</Text></Text>
           <View style={{flexWrap: 'wrap', flexDirection: 'row'}}>
@@ -467,6 +527,18 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
           />
         </View>
         <View style={[styles.inputContainerStyle]}>
+          
+          <Text style={styles.labelStyle}>Location<Text style={{color: 'red'}}>*</Text></Text>
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.inputStyle, styles.inputWithIcon]}
+              onChangeText={setLocation}
+              value={location}
+            />
+            <Scanner scannerStyle={styles.scannerStyle} setCode={setLocation}/>
+          </View>
+        </View>
+        {/* <View style={[styles.inputContainerStyle]}>
           <Text style={styles.labelStyle}>Shelf<Text style={{color: 'red'}}>*</Text></Text>
           <TextInput
             style={styles.inputStyle}
@@ -482,10 +554,13 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
             onChangeText={setLayer}
             value={layer}
           />
-        </View>
+        </View> */}
         <View style={[styles.inputContainerStyle, {paddingBottom: 30}]}>
-          <Button title='Submit' onPress={handleSubmit}/>
+          <Button title='Submit' onPress={handleSubmit} disabled={isLoading}/>
         </View>
+        {isLoading && <View style={[{height: 60}, commonStyles.center]}>
+          <ActivityIndicator animating={true} size={'large'}/>
+        </View>}
       </>
     </ScrollView>
   );
@@ -509,6 +584,15 @@ const styles = StyleSheet.create({
   },
   inputContainerStyle:{
     marginBottom: 10
+  },
+  row: {
+    flexDirection: 'row',
+  },
+  inputWithIcon:{
+    flex: 6
+  },
+  scannerStyle:{
+    flex: 1,
   }
 });
 

@@ -14,11 +14,12 @@ import ItemEditor from './src/screens/import/ItemEditor';
 import PermissionsPage from './src/screens/auth/PermissionsPage'
 import { NativeBaseProvider} from "native-base";
 import { Camera } from 'react-native-vision-camera';
-import { CodeScannerPage } from './src/screens/import/CodeScannerPage'; 
-import { CameraPage } from './src/screens/import/CameraPage';
+import { CodeScannerPage } from './src/components/CodeScannerPage'; 
+import { CameraPage } from './src/components/CameraPage';
 import TestCamera from './src/screens/import/CameraTest';
+import {Routes} from './src/Routes';
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<Routes>();
 
 function App(): React.JSX.Element {
   const cameraPermission = Camera.getCameraPermissionStatus()
