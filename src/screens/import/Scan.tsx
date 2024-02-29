@@ -33,7 +33,7 @@ import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Routes } from '../../Routes';
 import { CameraRoll } from '@react-native-camera-roll/camera-roll';
-import { get_item_info_by_code, getStatus, scrap_info_by_url } from '../../services/inventory';
+import { get_item_info_by_code, getStatus, scrap_info_by_num_code, scrap_info_by_url } from '../../services/inventory';
 import axios, { AxiosError } from 'axios';
 import { NotFoundError } from '../../utils/customizeError';
 import useErrorHandler  from '../../hooks/useErrorHandler';
@@ -131,7 +131,7 @@ function Scan(): React.JSX.Element {
     }
     try{
       setIsLoading(true);
-      const item = await get_item_info_by_code(code);
+      const item = await scrap_info_by_num_code(code);
       setIsLoading(false);
       console.log('item', item)
       navigation.navigate('ItemEditor', {itemInfo: item});

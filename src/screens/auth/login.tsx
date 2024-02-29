@@ -86,6 +86,7 @@ function Login({navigation}: any): React.JSX.Element {
 			navigation.navigate('Home');
 			AsyncStorage.setItem('user', JSON.stringify(data))
 		}catch(err){
+			setIsLoading(false);
 			Alert.alert('login failed');
 		}
 	}

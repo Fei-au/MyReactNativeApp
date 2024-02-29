@@ -36,6 +36,19 @@ export const scrap_info_by_url = async (url)=>{
     }
 }
 
+export const scrap_info_by_num_code = async (code)=>{
+    try{
+        const {data} = await axios.get(`${APIURL}${app}/scrap_info_by_num_code/${code}`);
+        if(data.status === 'success'){
+            return data.data;
+        }else if(data.status === 'not found'){
+            throw new NotFoundError(data.message);
+        }
+    }catch(err){
+        throw new Error(err)
+    }
+}
+
 export const add_new_item = async (item)=>{
     try{
         const {data} = await axios.post(`${APIURL}${app}/add_new_item`, item, {
