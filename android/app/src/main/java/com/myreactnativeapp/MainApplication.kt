@@ -1,4 +1,4 @@
-package com.myreactnativeapp
+package com.ruitowarehouse
 
 import android.app.Application
 import com.facebook.react.PackageList

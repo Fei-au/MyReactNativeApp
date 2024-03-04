@@ -1,4 +1,4 @@
-package com.myreactnativeapp
+package com.ruitowarehouse
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

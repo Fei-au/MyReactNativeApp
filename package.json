@@ -35,7 +35,7 @@
     "react-native-static-safe-area-insets": "^2.2.0",
     "react-native-svg": "^12.3.0",
     "react-native-vector-icons": "^10.0.3",
-    "react-native-vision-camera": "^3.8.2",
+    "react-native-vision-camera": "^3.9.1",
     "react-native-worklets-core": "^0.3.0"
   },
   "devDependencies": {

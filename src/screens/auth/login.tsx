@@ -35,6 +35,7 @@ import { useToast } from 'native-base';
 import axios, { AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { login } from '../../services/auth';
+import { APIURL } from '../../Constants';
 
 
 type tabType = {title : string};
@@ -87,7 +88,7 @@ function Login({navigation}: any): React.JSX.Element {
 			AsyncStorage.setItem('user', JSON.stringify(data))
 		}catch(err){
 			setIsLoading(false);
-			Alert.alert('login failed');
+			Alert.alert('login failed', err?.message + `${APIURL}${'staff'}/login`);
 		}
 	}
 
