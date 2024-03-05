@@ -7,9 +7,8 @@ const app = 'staff';
 export const login = async (code)=>{
     try{
         const {data} = await axios.post(`${APIURL}${app}/login`, code);
-        console.log('data', data)
         if(data.status === 'success'){
-            return data.id;
+            return data;
         }else{
             throw new AuthFailedError('Login failed');
         }

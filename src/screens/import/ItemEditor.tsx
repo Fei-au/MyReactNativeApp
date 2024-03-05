@@ -305,7 +305,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         // layer: layer,
         customize_size: size + '',
         customize_color: color,
-        add_staff: 9 || userRef.current.staff_id,
+        add_staff: userRef.current.staff_id,
       }
       console.log('item', item)
       fd.append('item', JSON.stringify(item))

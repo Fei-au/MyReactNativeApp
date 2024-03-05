@@ -1,4 +1,3 @@
-import { ImagePicker, Toast } from '@ant-design/react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome'
@@ -120,18 +119,18 @@ function Scan(): React.JSX.Element {
       })
     }else{
       setCode(barcodes[0]);
-      func();
+      func(barcodes[0]);
     }
     navigation.goBack()
   }
 
-  const func = async ()=>{
-    if(!code){
+  const func = async (cd = code)=>{
+    if(!cd){
       return;
     }
     try{
       setIsLoading(true);
-      const item = await scrap_info_by_num_code(code);
+      const item = await get_item_info_by_code(cd);
       setIsLoading(false);
       console.log('item', item)
       navigation.navigate('ItemEditor', {itemInfo: item});

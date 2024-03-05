@@ -84,8 +84,9 @@ function Login({navigation}: any): React.JSX.Element {
 				password: password,
 			})
 			setIsLoading(false);
-			navigation.navigate('Home');
 			AsyncStorage.setItem('user', JSON.stringify(data))
+			console.log('data.....', data)
+			navigation.navigate('Home');
 		}catch(err){
 			setIsLoading(false);
 			Alert.alert('login failed', err?.message + `${APIURL}${'staff'}/login`);
