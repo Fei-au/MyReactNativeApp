@@ -1,7 +1,7 @@
 import { Dimensions, Platform } from 'react-native'
 import StaticSafeAreaInsets from 'react-native-static-safe-area-insets'
 
-export const APIURL = 'http://34.68.98.31/';
+export const APIURL = 'http://35.209.176.71/';
 
 export const CONTENT_SPACING = 15
 
