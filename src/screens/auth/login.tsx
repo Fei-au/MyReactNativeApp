@@ -36,7 +36,9 @@ import axios, { AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { login } from '../../services/auth';
 import { APIURL } from '../../Constants';
+import Config from 'react-native-config';
 
+console.log('Config', Config)
 
 type tabType = {title : string};
 
@@ -48,7 +50,7 @@ const tabs: tabType[] = [
 type Props = NativeStackScreenProps<Routes, 'PermissionsPage'>
 
 function Login({navigation}: any): React.JSX.Element {
-	
+	console.log('APIURL', APIURL)
   const isDarkMode = useColorScheme() === 'dark';
   const toast = useToast();
 
