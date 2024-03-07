@@ -30,7 +30,6 @@ export function CameraPage({ navigation, route }: any): React.ReactElement {
   const {afterTakenPhoto} = route.params;
   const [isCameraInitialized, setIsCameraInitialized] = useState(false)
   const hasMicrophonePermission = useMemo(() => Camera.getMicrophonePermissionStatus() === 'granted', [])
-  const zoom = useSharedValue(0)
   const isPressingButton = useSharedValue(false)
 
   // check if camera page is active
@@ -45,16 +44,17 @@ export function CameraPage({ navigation, route }: any): React.ReactElement {
 
   // camera device settings
   let device = useCameraDevice('back')
+  const zoom = useSharedValue(0)
 
   const [targetFps, setTargetFps] = useState(60)
 
   const screenAspectRatio = SCREEN_HEIGHT / SCREEN_WIDTH
   const format = useCameraFormat(device, [
-    { fps: targetFps },
-    { videoAspectRatio: screenAspectRatio },
-    { videoResolution: 'max' },
-    { photoAspectRatio: screenAspectRatio },
-    { photoResolution: 'max' },
+    // { fps: targetFps },
+    { videoAspectRatio: 1600/720 },
+    { videoResolution: { width: 720, height: 1600 } },
+    { photoAspectRatio: 1600/720  },
+    { photoResolution: { width: 720, height: 1600 } },
   ])
 
   const fps = Math.min(format?.maxFps ?? 1, targetFps)
@@ -67,9 +67,11 @@ export function CameraPage({ navigation, route }: any): React.ReactElement {
   //#region Animated Zoom
   // This just maps the zoom factor to a percentage value.
   // so e.g. for [min, neutr., max] values [1, 2, 128] this would result in [0, 0.0081, 1]
-  const minZoom = device?.minZoom ?? 1
-  const maxZoom = Math.min(device?.maxZoom ?? 1, MAX_ZOOM_FACTOR)
+  // const minZoom = device?.minZoom ?? 1
+  // const maxZoom = Math.min(device?.maxZoom ?? 1, MAX_ZOOM_FACTOR)
 
+  const minZoom = 1
+  const maxZoom = 16
   const cameraAnimatedProps = useAnimatedProps(() => {
     const z = Math.max(Math.min(zoom.value, maxZoom), minZoom)
     return {
@@ -162,7 +164,7 @@ export function CameraPage({ navigation, route }: any): React.ReactElement {
   return (
     <View style={styles.container}>
       {device != null && (
-        <GestureHandlerRootView style={[{ flex: 1} ,StyleSheet.absoluteFill] }>
+        <GestureHandlerRootView style={[{ flex: 1}, StyleSheet.absoluteFill] }>
             <PinchGestureHandler onGestureEvent={onPinchGesture} enabled={isActive}>
             <Reanimated.View style={StyleSheet.absoluteFill}>
                 <TapGestureHandler  numberOfTaps={2}>
@@ -170,29 +172,41 @@ export function CameraPage({ navigation, route }: any): React.ReactElement {
                     ref={camera}
                     style={StyleSheet.absoluteFill}
                     device={device}
-                    format={format}
-                    fps={fps}
-                    photoHdr={enableHdr}
-                    videoHdr={enableHdr}
-                    lowLightBoost={device.supportsLowLightBoost && enableNightMode}
+                    format={isCameraInitialized?format:undefined}
+                    // fps={fps}
+                    // photoHdr={enableHdr}
+                    // videoHdr={enableHdr}
+                    // lowLightBoost={device.supportsLowLightBoost && enableNightMode}
                     isActive={isActive}
                     onInitialized={onInitialized}
                     onError={onError}
-                    enableZoomGesture={false}
-                    animatedProps={cameraAnimatedProps}
-                    exposure={0}
-                    enableFpsGraph={true}
-                    orientation="portrait"
+                    // enableZoomGesture={false}
+                    // animatedProps={cameraAnimatedProps}
+                    // exposure={0}
+                    // enableFpsGraph={true}
+                    orientation="landscape-right"
                     photo={true}
-                    video={true}
-                    audio={hasMicrophonePermission}
-                    frameProcessor={frameProcessor}
+                    resizeMode={'contain'}
+                    // video={true}
+                    // audio={hasMicrophonePermission}
+                    // frameProcessor={frameProcessor}
                 />
                 </TapGestureHandler>
             </Reanimated.View>
             </PinchGestureHandler>
         </GestureHandlerRootView>
       )}
+      {/* {device != null && <Camera 
+        ref={camera}
+        style={StyleSheet.absoluteFill}
+        device={device}
+        isActive={isActive}
+
+        // format={format}
+        // orientation="portrait"
+        // photo={true}
+
+      />} */}
 
       <CaptureButton
         style={styles.captureButton}

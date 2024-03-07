@@ -61,9 +61,9 @@ const _CaptureButton: React.FC<Props> = ({
   // const recordingProgress = useSharedValue(0)
   const takePhotoOptions = useMemo<TakePhotoOptions>(
     () => ({
-      qualityPrioritization: 'speed',
+      // qualityPrioritization: 'speed',
       flash: flash,
-      quality: 85,
+      // quality: 85,
       enableShutterSound: false,
     }),
     [flash],
