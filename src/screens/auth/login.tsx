@@ -91,7 +91,7 @@ function Login({navigation}: any): React.JSX.Element {
 			navigation.navigate('Home');
 		}catch(err){
 			setIsLoading(false);
-			Alert.alert('login failed', err?.message + `${APIURL}${'staff'}/login`);
+			Alert.alert('login failed', (err as any)?.message + `${APIURL}${'staff'}/login`);
 		}
 	}
 

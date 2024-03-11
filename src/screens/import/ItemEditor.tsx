@@ -29,6 +29,7 @@ import { getBidStartPrice } from '../../utils/inventoryUtils';
 import Scanner from '../../components/Scanner';
 import { PhotoFile, VideoFile } from 'react-native-vision-camera';
 import { commonStyles } from '../../styles/styles';
+import { CameraOptions, ImagePickerResponse, launchCamera, OptionsCommon } from 'react-native-image-picker';
 
 
 interface CaseNumParam {
@@ -210,7 +211,30 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
       toast.show({description: 'Reach maximum photo limit 10, please remove other photos first!'});
       return;
     }
-    navigation.navigate('CameraPage', {afterTakenPhoto: afterTakenPhoto});
+    // react-native-image-picker
+    const options: CameraOptions = {
+      mediaType: 'photo',
+      quality: 0.1
+    };
+    launchCamera(options, (response: ImagePickerResponse) => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorCode) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+      } else {
+        if(response.assets){
+          const newPath = response.assets[0].uri;
+          setPics([...pics, {
+            url: newPath,
+            id: Math.random(),
+            has_saved: false,
+          }])
+        }else{
+          Alert.alert('Failed to take photo!', `An unexpected error occured while trying to taken photo.`)
+        }
+      }
+    });
+    // navigation.navigate('CameraPage', {afterTakenPhoto: afterTakenPhoto});
   }
 
   const afterTakenPhoto = async(photo: PhotoFile | VideoFile)=>{

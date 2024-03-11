@@ -13,6 +13,7 @@ export const login = async (code)=>{
             throw new AuthFailedError('Login failed');
         }
     }catch(err){
+        console.log('err', err)
         throw new Error(err)
     }
 }

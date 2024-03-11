@@ -49,13 +49,16 @@ export function CameraPage({ navigation, route }: any): React.ReactElement {
   const [targetFps, setTargetFps] = useState(60)
 
   const screenAspectRatio = SCREEN_HEIGHT / SCREEN_WIDTH
-  const format = useCameraFormat(device, [
-    // { fps: targetFps },
-    { videoAspectRatio: 1600/720 },
-    { videoResolution: { width: 720, height: 1600 } },
-    { photoAspectRatio: 1600/720  },
-    { photoResolution: { width: 720, height: 1600 } },
-  ])
+  console.log('base format', device.formats[0])
+  const format = useCameraFormat(device, 
+    [
+      { fps: targetFps },
+      // { videoAspectRatio: screenAspectRatio},
+      { videoResolution: { width: 1920, height: 1440 } },
+      // { photoAspectRatio: 1600/720  },
+      // { photoResolution: { width: 720, height: 1600 } },
+    ]
+  )
 
   const fps = Math.min(format?.maxFps ?? 1, targetFps)
 
@@ -170,9 +173,9 @@ export function CameraPage({ navigation, route }: any): React.ReactElement {
                 <TapGestureHandler  numberOfTaps={2}>
                 <ReanimatedCamera
                     ref={camera}
-                    style={StyleSheet.absoluteFill}
+                    style={[ {width: '100%', height: '100%'}]}
                     device={device}
-                    format={isCameraInitialized?format:undefined}
+                    // format={isCameraInitialized?format:undefined}
                     // fps={fps}
                     // photoHdr={enableHdr}
                     // videoHdr={enableHdr}
@@ -184,9 +187,9 @@ export function CameraPage({ navigation, route }: any): React.ReactElement {
                     // animatedProps={cameraAnimatedProps}
                     // exposure={0}
                     // enableFpsGraph={true}
-                    orientation="landscape-right"
+                    orientation="portrait"
                     photo={true}
-                    resizeMode={'contain'}
+                    // resizeMode={'contain'}
                     // video={true}
                     // audio={hasMicrophonePermission}
                     // frameProcessor={frameProcessor}
