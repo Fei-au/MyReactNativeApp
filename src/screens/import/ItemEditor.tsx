@@ -123,7 +123,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
   // const [upcCode, setUpcCode] = useState(itemInfo.upc_code || '');
   // const [eanCode, setEanCode] = useState(itemInfo.ean_code || '');
   // const [FNSkuCode, setFNSkuCode] = useState(itemInfo.fnsku_code || '');
-  // const [lpnCode, setLpnCode] = useState(itemInfo.lpn_code || '');
+  const [lpnCode, setLpnCode] = useState(itemInfo.lpn_code || '');
   const [pics, setPics] = useState<{}[]>(itemInfo.pics ? itemInfo.pics.map((ele:picType)=>{return {id: ele.id || Math.random(), url: ele.url, has_saved: ele.has_saved}}): []); // Item pictures, get from 1. database 2. scraped 3. photos taken
   
   const [status, setStatus] = useState<string>('');
@@ -318,10 +318,10 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         // upc_code: upcCode,
         // ean_code: eanCode,
         // fnsku_code: FNSkuCode,
-        // lpn_code: lpnCode,
+        lpn_code: lpnCode,
         msrp_price: Number(price?.substring(1,)),
         bid_start_price: bidStartPriceRef.current,
-        status: parseInt(status),
+        status_id: parseInt(status),
         status_note: statusNote,
         category: parseInt(category),
         location: location,
