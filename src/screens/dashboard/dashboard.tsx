@@ -56,11 +56,15 @@ function Dashboard (){
 				setIsFetching(true);
 				const ur = await AsyncStorage.getItem('user');
 				userRef.current = JSON.parse(ur as string);
-				const res = await get_last_items(userRef.current.staff_id, pageRef.current++);
-				if(res.length === 0){
+				const pml = [];
+				pml.push(get_last_items(userRef.current.staff_id, pageRef.current++))
+				pml.push(get_last_items(userRef.current.staff_id, pageRef.current++))
+				const resl = await Promise.all(pml); 
+				const [res, res2] = resl;
+				if(res.length === 0 || res2.length === 0){
 					setAllDataFetched(true);
 				}else{
-					setItems(res);
+					setItems([...res, ...res2]);
 				}
 				setIsFetching(false);
 			}catch(err){
@@ -78,8 +82,13 @@ function Dashboard (){
 			if (isFetching || allDataFetched) return;
 			setIsFetching(true);
 			const res = await get_last_items(userRef.current.staff_id, pageRef.current++);
+			if(res.length === 0){
+				setAllDataFetched(true);
+				return;
+			}else{
+				setItems([...itm, ...res]);
+			}
 			setIsFetching(false);
-			setItems([...itm, ...res]);
 		}catch(err){
 			errorHandler(err);
 			setIsFetching(false);
