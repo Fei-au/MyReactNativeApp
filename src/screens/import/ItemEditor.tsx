@@ -115,7 +115,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
 
   // Following params used for after scraping
   const [caseNumber, setCaseNumber] = useState('');
-  const [itemNumber, setItemNumber] = useState(itemInfo.itemNumber || '');
+  const [itemNumber, setItemNumber] = useState(itemInfo.item_number || '');
   const [title, setTitle] = useState(itemInfo.title || '');
   const [description, setDescription] = useState(itemInfo.description || '');
 
@@ -127,7 +127,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
   const [lpnCode, setLpnCode] = useState(itemInfo.lpn_code || '');
   const [pics, setPics] = useState<{}[]>(itemInfo.pics ? itemInfo.pics.map((ele:picType)=>{return {id: ele.id || Math.random(), url: ele.url, has_saved: ele.has_saved}}): []); // Item pictures, get from 1. database 2. scraped 3. photos taken
   
-  const [status, setStatus] = useState<string>('');
+  const [status, setStatus] = useState<string>(itemInfo?.status);
   const [statusData, setStatusData] = useState<SelectDataInterface[]>([]); // Status enum data, get from database
   const [statusNote, setStatusNote] = useState('');
   
@@ -285,7 +285,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
       if(!requiredCheck(description, 'Description')) return false;
     //   if(!requiredCheck(pics, 'Picture')) return false;
       if(!requiredCheck(status, 'Status')) return false;
-      if(status !== '1' && !requiredCheck(statusNote, 'Status note')) return false;
+      if(status !== '1' && status !== '2' && !requiredCheck(statusNote, 'Status note')) return false;
       if(!requiredCheck(category, 'category')) return false;
       if(!requiredCheck(price || '', 'Price')) return false;
       if(!requiredCheck(location, 'Location')) return false;
@@ -348,9 +348,11 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         }
       })
       console.log('submit')
+      setIsLoading(true);
       const res = await add_new_item(fd);
       await AsyncStorage.setItem('case_number', caseNumber);
       await AsyncStorage.setItem('location', location);
+      setIsLoading(false);
       // const res = await image_upload(fd);
       console.log('**********res', res);
       Alert.alert(
@@ -366,6 +368,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
     }catch(err){
       errorHandler(err);
       console.log(err)
+      setIsLoading(false);
     }
   }
 
@@ -494,14 +497,17 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
             {statusData.map((item)=><Select.Item label={item.label} value={item.value} />)}
           </Select>
         </View>
-        {(status !== '' && status !== '1') ? <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>Status Note<Text style={{color: 'red'}}>*</Text></Text>
+        <View style={styles.inputContainerStyle}>
+          <Text style={styles.labelStyle}>
+            Status Note
+            {(status !== '1' && status !== '2') ? <Text style={{color: 'red'}}>*</Text> : null}
+          </Text>
           <TextInput
             style={styles.inputStyle}
             onChangeText={setStatusNote}
             value={statusNote}
           />
-        </View> : null}
+        </View>
         <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Category<Text style={{color: 'red'}}>*</Text></Text>
           <Select selectedValue={category} minWidth="200" accessibilityLabel="Choose Class" placeholder="Choose Class" _selectedItem={{bg: "teal.600", endIcon: <AntIcon name='check' size={5} />}} mt={1} onValueChange={setCategory}>

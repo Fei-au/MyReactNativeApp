@@ -17,4 +17,7 @@ export interface itemType {
   images?: Array<imageType>,
   item_number?: number,
   location?: string,
+  category?: {id: number, name: string} | {id: string, name: string},
+  category_id?: string,
+  status?: {id: string, name: string} | {id: number, name: string},
 }

@@ -7,18 +7,26 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { delete_item, get_last_items } from "../../services/inventory";
 import { errorHandler } from "../../utils/errorHandler";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { PressableOpacity } from "react-native-pressable-opacity";
 import { Modal, Button } from "native-base";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
+import { Routes } from "../../Routes";
 
 interface propsType extends itemType {
-	dlt: ()=>void
+	dlt: ()=>void,
+	edit: ()=>void,
 }
 
 function Item (props: propsType){
-	const {title, images, item_number, location, dlt} = props;
+	const {title, images, item_number, location, dlt, edit} = props;
 
 	const onPressHandler = ()=>{
 		dlt();
+	}
+
+	const onPressEdit = ()=>{
+		edit()
 	}
 
 	return (
@@ -32,11 +40,16 @@ function Item (props: propsType){
 					Item_number: {item_number}. Location: {location}
 				</Text>
 			</View>
-			<TouchableOpacity onPress={onPressHandler}>
-			<View style={[{flex: 1, justifyContent: 'center'}]}>
-				<MaterialCommunityIcons name='delete' size={20}/>
+
+			<View style={[{flex: 1, justifyContent: 'center', flexDirection: 'column'}]}>
+				<TouchableOpacity onPress={onPressHandler}>
+					<MaterialCommunityIcons name='delete' size={20}/>
+				</TouchableOpacity>
+				<View style={{height: 10}}/>
+				<TouchableOpacity onPress={onPressEdit}>
+					<MaterialCommunityIcons name='archive-edit' size={20}/>
+				</TouchableOpacity>
 			</View>
-			</TouchableOpacity>
 		</View>
 	);
 }
@@ -48,6 +61,8 @@ function Dashboard (){
 	const [isFetching, setIsFetching] = useState(false);
 	const [allDataFetched, setAllDataFetched] = useState(false);
 	const [modalVisible, setModalVisible] = useState(false);
+	const navigation = useNavigation<NavigationProp<Routes>>();
+
 	const modalIdRef = useRef(-1);
 
 	useEffect(()=>{
@@ -62,6 +77,7 @@ function Dashboard (){
 				const resl = await Promise.all(pml); 
 				const [res, res2] = resl;
 				if(res.length === 0 || res2.length === 0){
+					setItems([...res, ...res2]);
 					setAllDataFetched(true);
 				}else{
 					setItems([...res, ...res2]);
@@ -77,9 +93,9 @@ function Dashboard (){
 	}, [])
 
 
-	const fetchData = async(itm = items)=>{
+	const fetchData = async(itm = items, allDf = allDataFetched)=>{
 		try{
-			if (isFetching || allDataFetched) return;
+			if (isFetching || allDf) return;
 			setIsFetching(true);
 			const res = await get_last_items(userRef.current.staff_id, pageRef.current++);
 			if(res.length === 0){
@@ -94,6 +110,7 @@ function Dashboard (){
 			setIsFetching(false);
 		}
 	}
+
 	const renderFooter = () => {
 		if (!isFetching) return null;
 		return <ActivityIndicator/>;
@@ -109,18 +126,33 @@ function Dashboard (){
 			await delete_item(modalIdRef.current)
 			setModalVisible(false);
 			pageRef.current = 1;
-			await fetchData([]);
+			setItems([]);
+			await fetchData([], false);
 		}catch(err){
 			errorHandler(err);
 			setModalVisible(false);
 		}
+	}
+	
+	const handleEditItem = (index: number)=>{
+		console.log('item', items[index])
+		navigation.navigate('ItemEditor', {itemInfo: {
+			...items[index],
+			pics: items[index].images?.map(ele=>{return {
+				...ele,
+				url: ele.full_image_url,
+				has_saved: true,
+			}}),
+			category: {id: items[index]?.category_id},
+			status: items[index]?.status?.id,
+		}});
 	}
 
 	return(
 		<SafeAreaView style={styles.container}>
 			<FlatList
 				data={items}
-				renderItem={({item}) => <Item {...item} dlt={()=>{handleDeleteItem(item.id)}}/>}
+				renderItem={({item, index}) => <Item {...item} dlt={()=>{handleDeleteItem(item.id)}} edit={()=>handleEditItem(index)}/>}
 				keyExtractor={item => String(item.id)}
 				onEndReached={(info)=>fetchData()}
 				onEndReachedThreshold={0.5}
