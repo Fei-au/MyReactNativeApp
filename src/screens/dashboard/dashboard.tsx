@@ -114,7 +114,7 @@ function Dashboard (){
 				renderItem={({item}) => <Item {...item} dlt={()=>{handleDeleteItem(item.id)}}/>}
 				keyExtractor={item => String(item.id)}
 				onEndReached={(info)=>fetchData()}
-				onEndReachedThreshold={0.1}
+				onEndReachedThreshold={0.5}
 				ListFooterComponent={renderFooter} // Render a loading indicator at the bottom
 			/>
 			<Modal
