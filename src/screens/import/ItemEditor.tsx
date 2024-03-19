@@ -30,6 +30,7 @@ import Scanner from '../../components/Scanner';
 import { PhotoFile, VideoFile } from 'react-native-vision-camera';
 import { commonStyles } from '../../styles/styles';
 import { CameraOptions, ImagePickerResponse, launchCamera, OptionsCommon } from 'react-native-image-picker';
+import { errorHandler } from '../../utils/errorHandler';
 
 
 interface CaseNumParam {
@@ -154,12 +155,15 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         console.log('statuslist', statuslist)
         console.log('categlist', categlist)
         const storedValue = await AsyncStorage.getItem('case_number');
+        const storedLocation = await AsyncStorage.getItem('location');
         const ur = await AsyncStorage.getItem('user');
         userRef.current = JSON.parse(ur as string);
         setCaseNumber(storedValue || '');
+        setLocation(storedLocation || '');
         setStatusData(statuslist.map((ele: statusDataType)=> {return {label: ele.status, value: ele.id }}))
         setClassificationData(categlist.map((ele: categoryDataType)=> {return {label: ele.name, value: ele.id }}))
     }catch(err){
+      errorHandler(err);
       }
     }
     func();
@@ -329,7 +333,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         // layer: layer,
         customize_size: size + '',
         customize_color: color,
-        add_staff: userRef.current.staff_id,
+        add_staff_id: userRef.current.staff_id,
       }
       console.log('item', item)
       fd.append('item', JSON.stringify(item))
@@ -346,6 +350,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
       console.log('submit')
       const res = await add_new_item(fd);
       await AsyncStorage.setItem('case_number', caseNumber);
+      await AsyncStorage.setItem('location', location);
       // const res = await image_upload(fd);
       console.log('**********res', res);
       Alert.alert(
@@ -359,6 +364,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         ]
       )
     }catch(err){
+      errorHandler(err);
       console.log(err)
     }
   }

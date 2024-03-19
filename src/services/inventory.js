@@ -91,7 +91,19 @@ export const getCategory = async ()=>{
     return data;
 }
 
+export const get_last_items = async(staff_id, page_number_from_last)=>{
+    const {data} = await axios.get(`${APIURL}${app}/get_last_items/${staff_id}`, {
+        params: {
+            page_number_from_last: page_number_from_last
+        }
+    });
+    return data;
+}
 
+export const delete_item = async(id)=>{
+    const {data} = await axios.delete(`${APIURL}${app}/delete_item/${id}`);
+    return data;
+}
 
 
 
