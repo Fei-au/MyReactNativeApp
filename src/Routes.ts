@@ -4,6 +4,6 @@ export type Routes = {
     CameraPage: undefined
     Login: undefined
     Home: undefined
-    ItemEditor: undefined | {itemInfo: object}
+    ItemEditor: undefined | {itemInfo: object} | {itemInfo: object, isNew: boolean}
 
   }

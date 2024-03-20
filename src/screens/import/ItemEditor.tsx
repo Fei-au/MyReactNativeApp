@@ -31,6 +31,7 @@ import { PhotoFile, VideoFile } from 'react-native-vision-camera';
 import { commonStyles } from '../../styles/styles';
 import { CameraOptions, ImagePickerResponse, launchCamera, OptionsCommon } from 'react-native-image-picker';
 import { errorHandler } from '../../utils/errorHandler';
+import { imageType } from '../../utils/types';
 
 
 interface CaseNumParam {
@@ -67,11 +68,6 @@ interface IsManulInputParams {
   color?: boolean,
   price?: boolean,
 }
-type picType={
-  has_saved: boolean,
-  url: string,
-  id: number,
-}
 
 type userType = {
   user_id?: number,
@@ -107,6 +103,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
   // Code, url used before scraping
   // const {itemInfo} = route.params;
   const [itemInfo, setItemInfo] = useState(route.params.itemInfo);
+  const isNew = route.params.isNew;
   const toast = useToast();
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -114,8 +111,8 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
   const [isManulInput, setIsManulInput] = useState<IsManulInputParams>({});
 
   // Following params used for after scraping
-  const [caseNumber, setCaseNumber] = useState('');
-  const [itemNumber, setItemNumber] = useState(itemInfo.item_number || '');
+  const [caseNumber, setCaseNumber] = useState(itemInfo.case_number || '');
+  const [itemNumber, setItemNumber] = useState(isNew ? '' : (itemInfo.item_number || ''));
   const [title, setTitle] = useState(itemInfo.title || '');
   const [description, setDescription] = useState(itemInfo.description || '');
 
@@ -125,23 +122,24 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
   // const [eanCode, setEanCode] = useState(itemInfo.ean_code || '');
   // const [FNSkuCode, setFNSkuCode] = useState(itemInfo.fnsku_code || '');
   const [lpnCode, setLpnCode] = useState(itemInfo.lpn_code || '');
-  const [pics, setPics] = useState<{}[]>(itemInfo.pics ? itemInfo.pics.map((ele:picType)=>{return {id: ele.id || Math.random(), url: ele.url, has_saved: ele.has_saved}}): []); // Item pictures, get from 1. database 2. scraped 3. photos taken
+  const [pics, setPics] = useState<{}[]>(itemInfo.images ? itemInfo.images.map((ele:imageType)=>{return {id: Math.random(), img_id: ele.id, url: ele.full_image_url}}): []); // Item pictures, get from 1. database 2. scraped 3. photos taken
   
-  const [status, setStatus] = useState<string>(itemInfo?.status);
+  const [status, setStatus] = useState<string>(isNew ? '' : (itemInfo.status ? itemInfo.status.toString() : ''));
   const [statusData, setStatusData] = useState<SelectDataInterface[]>([]); // Status enum data, get from database
-  const [statusNote, setStatusNote] = useState('');
+  const [statusNote, setStatusNote] = useState(isNew ? '' : (itemInfo.status_note || ''));
   
-  const [category, setCategory] = useState(itemInfo.category?.id || '');
-  const [classificationData, setClassificationData] = useState<SelectDataInterface[]>(itemInfo.category? [{label: itemInfo.category.name, value: itemInfo.category.id}] : []);
+  const [category, setCategory] = useState(itemInfo.category ? itemInfo.category.toString() : '');
+  const [classificationData, setClassificationData] = useState<SelectDataInterface[]>([]);
 
-  const [size, setSize] = useState(itemInfo.customize_size || '');
-  const [color, setColor] = useState(itemInfo.customize_color || '');
+  const [size, setSize] = useState(isNew ? '' : (itemInfo.customize_size || ''));
+  const [color, setColor] = useState(isNew ? '' : (itemInfo.customize_color || ''));
   const [price, setPrice] = useState(itemInfo.msrp_price ? '$' + itemInfo.msrp_price : undefined);
-  const [location, setLocation] = useState('');
+  const [location, setLocation] = useState(isNew ? '' : (itemInfo.location || ''));
+  const urlRef = useRef('');
   // const [shelf, setSelf] = useState('');
   // const [layer, setLayer] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const bidStartPriceRef = useRef(itemInfo.bid_start_price + '' || null);
+  const bidStartPriceRef = useRef((itemInfo.bid_start_price + '') || null);
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
@@ -160,8 +158,8 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         userRef.current = JSON.parse(ur as string);
         setCaseNumber(storedValue || '');
         setLocation(storedLocation || '');
-        setStatusData(statuslist.map((ele: statusDataType)=> {return {label: ele.status, value: ele.id }}))
-        setClassificationData(categlist.map((ele: categoryDataType)=> {return {label: ele.name, value: ele.id }}))
+        setStatusData(statuslist.map((ele: statusDataType)=> {return {label: ele.status, value: ele.id.toString() }}))
+        setClassificationData(categlist.map((ele: categoryDataType)=> {return {label: ele.name, value: ele.id.toString() }}))
     }catch(err){
       errorHandler(err);
       }
@@ -231,7 +229,6 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
           setPics([...pics, {
             url: newPath,
             id: Math.random(),
-            has_saved: false,
           }])
         }else{
           Alert.alert('Failed to take photo!', `An unexpected error occured while trying to taken photo.`)
@@ -257,7 +254,6 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
       setPics([...pics, {
         url: newPath,
         id: Math.random(),
-        has_saved: false,
       }])
     } catch (e) {
       const message = e instanceof Error ? e.message : JSON.stringify(e)
@@ -325,7 +321,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         lpn_code: lpnCode,
         msrp_price: Number(price?.substring(1,)),
         bid_start_price: bidStartPriceRef.current,
-        status_id: parseInt(status),
+        status: parseInt(status),
         status_note: statusNote,
         category: parseInt(category),
         location: location,
@@ -333,16 +329,18 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         // layer: layer,
         customize_size: size + '',
         customize_color: color,
-        add_staff_id: userRef.current.staff_id,
+        add_staff: userRef.current.staff_id,
+        id: itemInfo.id,
       }
       console.log('item', item)
       fd.append('item', JSON.stringify(item))
+      fd.append('is_new', isNew)
       // fd.append('pics', pics.map((ele, index)=>{return {...ele, name: `${index}image`}}))
       // fd.append('images', pics.map((ele, index)=>{return {uri: ele.url, name: `${index}image`, type: 'image/jpg'}})
       pics.forEach((ele: any, index)=>{
-        console.log(typeof ele.has_saved)
-        if(ele.has_saved){
-          fd.append('img_id', ele.id)
+        if(ele.img_id){
+          console.log('img_id', ele.img_id)
+          fd.append('img_id', ele.img_id)
         }else{
           fd.append('image', {uri: ele.url, name: `${index+1}img.jpg`, type: 'image/jpg'})
         }
@@ -485,7 +483,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
           <View style={{flexWrap: 'wrap', flexDirection: 'row'}}>
             <ImagePicker
               onChange={setPics}
-              files={pics}
+              files={pics.map(ele=>{return {...ele, id: Math.random()}})}
               selectable={true}
               onAddImageClick={onAddImageClick}
             />

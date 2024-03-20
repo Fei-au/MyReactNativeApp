@@ -133,7 +133,7 @@ function Scan(): React.JSX.Element {
       const item = await get_item_info_by_code(cd);
       setIsLoading(false);
       console.log('item', item)
-      navigation.navigate('ItemEditor', {itemInfo: item});
+      navigation.navigate('ItemEditor', {itemInfo: item, isNew: true});
     }catch(err : any){
       setIsLoading(false);
       if(err instanceof NotFoundError){

@@ -6,9 +6,12 @@ export type userType = {
 }
 
 export type imageType = {
-  full_image_url?: string,
   id?: number,
+  full_image_url?: string,
   local_image?: string,
+  external_url: string,
+  has_saved?: boolean,
+  item?: number,
 }
 
 export interface itemType {

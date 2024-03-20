@@ -1,4 +1,4 @@
-import React, { ReactPropTypes, useState } from 'react';
+import React, { ReactPropTypes, useEffect, useState } from 'react';
 import {
   StyleSheet,
   useColorScheme,
@@ -25,9 +25,20 @@ function BottomMenu(props: homeProps): React.JSX.Element {
     const {navigation} = props;
     const isDarkMode = useColorScheme() === 'dark';
     const [selectedTab, setSelectedTab] = useState('scan'); 
+    const [refreshDashbaord, setRefreshDashboard] = useState(false);
     const backgroundStyle = {
         backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
     };
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('focus', () => {
+          setRefreshDashboard(prev=>!prev)
+          console.log('页面获得了焦点');
+        });
+    
+        return unsubscribe;
+      }, [navigation]);
+
 
     const onChangeTab = (tabName: string)=>{
         setSelectedTab(tabName);
@@ -51,7 +62,7 @@ function BottomMenu(props: homeProps): React.JSX.Element {
             title="Dashboard"
             selected={selectedTab === 'dashboard'}
             onPress={() => onChangeTab('dashboard')}>
-            <Dashboard/>
+            <Dashboard refresh={refreshDashbaord}/>
         </TabBar.Item>
         <TabBar.Item
             icon={<Icon name="user" />}

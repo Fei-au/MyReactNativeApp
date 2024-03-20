@@ -54,9 +54,14 @@ function Item (props: propsType){
 	);
 }
 
-function Dashboard (){
+type dashboardPropsType = {
+	refresh?: boolean,
+}
+function Dashboard (props: dashboardPropsType){
 	const userRef = useRef<userType>({});
 	const pageRef = useRef(1);
+	const {refresh} = props;
+	console.log('refresh', refresh)
 	const [items, setItems] = useState<Array<itemType>>([]);
 	const [isFetching, setIsFetching] = useState(false);
 	const [allDataFetched, setAllDataFetched] = useState(false);
@@ -67,6 +72,7 @@ function Dashboard (){
 
 	useEffect(()=>{
 		const func = async()=>{
+			pageRef.current = 1;
 			try{
 				setIsFetching(true);
 				const ur = await AsyncStorage.getItem('user');
@@ -76,6 +82,7 @@ function Dashboard (){
 				pml.push(get_last_items(userRef.current.staff_id, pageRef.current++))
 				const resl = await Promise.all(pml); 
 				const [res, res2] = resl;
+				console.log('in dashboard')
 				if(res.length === 0 || res2.length === 0){
 					setItems([...res, ...res2]);
 					setAllDataFetched(true);
@@ -90,7 +97,7 @@ function Dashboard (){
 			}
 		}
 		func()
-	}, [])
+	}, [refresh])
 
 
 	const fetchData = async(itm = items, allDf = allDataFetched)=>{
@@ -136,16 +143,7 @@ function Dashboard (){
 	
 	const handleEditItem = (index: number)=>{
 		console.log('item', items[index])
-		navigation.navigate('ItemEditor', {itemInfo: {
-			...items[index],
-			pics: items[index].images?.map(ele=>{return {
-				...ele,
-				url: ele.full_image_url,
-				has_saved: true,
-			}}),
-			category: {id: items[index]?.category_id},
-			status: items[index]?.status?.id,
-		}});
+		navigation.navigate('ItemEditor', {itemInfo: items[index], isNew: false});
 	}
 
 	return(
