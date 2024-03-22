@@ -141,7 +141,18 @@ function Scan(): React.JSX.Element {
           description: 'No item info found in database, please input B0 code or Amz website link',
         })
       }else{
-        showError(err);
+        // showError(err);
+
+        let message = 'Error happend';
+        if(axios.isAxiosError(err)){
+            message = err?.response?.data as string;
+        }else{
+            console.log('err.message', err.message)
+            message = err.message;
+        }
+        toast.show({
+            description: message,
+        });
       }
     }
   }

@@ -13,7 +13,8 @@ export const useErrorHandler = ()=>{
             message = err.message;
         }
         toast.show({
-            description: message
+            description: message,
+            duration: 3,
         });
     }
 
