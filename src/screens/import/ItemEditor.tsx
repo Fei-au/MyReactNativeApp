@@ -334,7 +334,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
       }
       console.log('item', item)
       fd.append('item', JSON.stringify(item))
-      fd.append('is_new', isNew)
+      fd.append('is_new', !!isNew)
       // fd.append('pics', pics.map((ele, index)=>{return {...ele, name: `${index}image`}}))
       // fd.append('images', pics.map((ele, index)=>{return {uri: ele.url, name: `${index}image`, type: 'image/jpg'}})
       pics.forEach((ele: any, index)=>{

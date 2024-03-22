@@ -155,7 +155,7 @@ function Scan(): React.JSX.Element {
       setIsLoading(true)
       const item = await scrap_info_by_url(url);
       setIsLoading(false)
-      navigation.navigate('ItemEditor', {itemInfo: item});
+      navigation.navigate('ItemEditor', {itemInfo: item, isNew: true});
     }catch(err){
       toast.show({
         description: 'Nothing scraped, please input item information manully',
