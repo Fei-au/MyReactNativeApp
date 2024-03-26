@@ -36,31 +36,31 @@ const showCodeAlert = (value: string, onDismissed: () => void): void => {
 type Props = NativeStackScreenProps<Routes, 'Home'>
 export function CodeScannerPage({route, navigation}: any): React.ReactElement {
   // 1. Use a simple default back camera
-  const d = useCameraDevice('back')
+  const device = useCameraDevice('back')
   const {getBarCode} = route.params;
 
   // 2. Only activate Camera when the app is focused and this screen is currently opened
   const isFocused = useIsFocused()
   const isForeground = useIsForeground()
-  const [isBack, setIsBack] = useState(false);
-  const device = isBack ? null : d
+  // const [isBack, setIsBack] = useState(false);
+  // const device = isBack ? null : d
   console.log('device', device)
-  const isActive = isFocused && isForeground && !isBack
+  const isActive = isFocused && isForeground
 
   // 3. (Optional) enable a torch setting
   const [torch, setTorch] = useState(false)
 
   // 4. On code scanned, we show an aler to the user
   const isShowingAlert = useRef(false)
-  useEffect(()=>{
-    if(isBack){
-      navigation.goBack();
-    }
-  }, [isBack])
+  // useEffect(()=>{
+  //   if(isBack){
+  //     navigation.goBack();
+  //   }
+  // }, [isBack])
   const onCodeScanned = useCallback((codes: Code[]) => {
-    setIsBack(true);
+    // setIsBack(true);
     getBarCode(codes.map(ele=>ele.value));
-    // navigation.goBack();
+    navigation.goBack();
     // console.log(`Scanned ${codes.length} codes:`, codes)
     // console.log(`Scanned ${codes.length} codes:`, codes)
     // const value = codes[0]?.value
@@ -103,7 +103,7 @@ export function CodeScannerPage({route, navigation}: any): React.ReactElement {
       </View>
 
       {/* Back Button */}
-      <PressableOpacity style={styles.backButton} onPress={()=>{setIsBack(true);}}>
+      <PressableOpacity style={styles.backButton} onPress={()=>{navigation.goBack();}}>
         <IonIcon name="chevron-back" color="white" size={35} />
       </PressableOpacity>
     </View>

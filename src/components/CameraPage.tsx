@@ -49,7 +49,7 @@ export function CameraPage({ navigation, route }: any): React.ReactElement {
   const [targetFps, setTargetFps] = useState(60)
 
   const screenAspectRatio = SCREEN_HEIGHT / SCREEN_WIDTH
-  console.log('base format', device.formats[0])
+  // console.log('base format', device.formats[0])
   const format = useCameraFormat(device, 
     [
       { fps: targetFps },

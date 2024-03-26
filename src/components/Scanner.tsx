@@ -34,7 +34,6 @@ function Scanner({scannerStyle, codeName, setCode}: ScannerProps){
             // navigation.navigate('ItemEditor', {[codeName]: barcodes[0]});
             // setCode(barcodes[0]);
         }
-        // navigation.goBack()
     }
 
     return (
