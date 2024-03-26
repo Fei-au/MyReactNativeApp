@@ -333,6 +333,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         customize_size: size + '',
         customize_color: color,
         add_staff: userRef.current?.staff_id || 0,
+        add_user: userRef.current?.user_id || 0,
         id: itemInfo.id,
       }
       console.log('item', item)

@@ -24,16 +24,17 @@ function Scanner({scannerStyle, codeName, setCode}: ScannerProps){
       }
     
     const getBarCode = (barcodes: string[])=>{
+        console.log('here in get bar code')
         if(barcodes.length === 0){
             toast.show({
                 description: 'No code found, please enter it manully',
             })
         }else{
             setCode(barcodes[0])
-            navigation.goBack()
             // navigation.navigate('ItemEditor', {[codeName]: barcodes[0]});
             // setCode(barcodes[0]);
         }
+        // navigation.goBack()
     }
 
     return (

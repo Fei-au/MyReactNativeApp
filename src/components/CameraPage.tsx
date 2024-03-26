@@ -53,9 +53,9 @@ export function CameraPage({ navigation, route }: any): React.ReactElement {
   const format = useCameraFormat(device, 
     [
       { fps: targetFps },
-      // { videoAspectRatio: screenAspectRatio},
-      { videoResolution: { width: 1920, height: 1440 } },
-      // { photoAspectRatio: 1600/720  },
+      { videoAspectRatio: screenAspectRatio},
+      // { videoResolution: { width: 1920, height: 1440 } },
+      { photoAspectRatio: screenAspectRatio  },
       // { photoResolution: { width: 720, height: 1600 } },
     ]
   )
@@ -175,18 +175,18 @@ export function CameraPage({ navigation, route }: any): React.ReactElement {
                     ref={camera}
                     style={[ {width: '100%', height: '100%'}]}
                     device={device}
-                    // format={isCameraInitialized?format:undefined}
-                    // fps={fps}
-                    // photoHdr={enableHdr}
-                    // videoHdr={enableHdr}
-                    // lowLightBoost={device.supportsLowLightBoost && enableNightMode}
+                    format={format}
+                    fps={fps}
+                    photoHdr={enableHdr}
+                    videoHdr={enableHdr}
+                    lowLightBoost={device.supportsLowLightBoost && enableNightMode}
                     isActive={isActive}
                     onInitialized={onInitialized}
                     onError={onError}
-                    // enableZoomGesture={false}
-                    // animatedProps={cameraAnimatedProps}
-                    // exposure={0}
-                    // enableFpsGraph={true}
+                    enableZoomGesture={false}
+                    animatedProps={cameraAnimatedProps}
+                    exposure={0}
+                    enableFpsGraph={true}
                     orientation="portrait"
                     photo={true}
                     // resizeMode={'contain'}

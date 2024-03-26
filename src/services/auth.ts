@@ -21,5 +21,3 @@ export const get_next_item_number = async (id: number)=>{
 }
 
 
-
-

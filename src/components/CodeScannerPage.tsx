@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React, {useEffect} from 'react'
 import { useCallback, useRef, useState } from 'react'
 import { Alert, AlertButton, Linking, StyleSheet, View } from 'react-native'
 import { Code, useCameraDevice, useCodeScanner } from 'react-native-vision-camera'
@@ -36,20 +36,29 @@ const showCodeAlert = (value: string, onDismissed: () => void): void => {
 type Props = NativeStackScreenProps<Routes, 'Home'>
 export function CodeScannerPage({route, navigation}: any): React.ReactElement {
   // 1. Use a simple default back camera
-  const device = useCameraDevice('back')
+  const d = useCameraDevice('back')
   const {getBarCode} = route.params;
 
   // 2. Only activate Camera when the app is focused and this screen is currently opened
   const isFocused = useIsFocused()
   const isForeground = useIsForeground()
-  const isActive = isFocused && isForeground
+  const [isBack, setIsBack] = useState(false);
+  const device = isBack ? null : d
+  console.log('device', device)
+  const isActive = isFocused && isForeground && !isBack
 
   // 3. (Optional) enable a torch setting
   const [torch, setTorch] = useState(false)
 
   // 4. On code scanned, we show an aler to the user
   const isShowingAlert = useRef(false)
+  useEffect(()=>{
+    if(isBack){
+      navigation.goBack();
+    }
+  }, [isBack])
   const onCodeScanned = useCallback((codes: Code[]) => {
+    setIsBack(true);
     getBarCode(codes.map(ele=>ele.value));
     // navigation.goBack();
     // console.log(`Scanned ${codes.length} codes:`, codes)
@@ -63,6 +72,8 @@ export function CodeScannerPage({route, navigation}: any): React.ReactElement {
     // isShowingAlert.current = true
     
   }, [])
+
+  console.log('isActive', isActive)
 
   // 5. Initialize the Code Scanner to scan QR codes and Barcodes
   const codeScanner = useCodeScanner({
@@ -92,7 +103,7 @@ export function CodeScannerPage({route, navigation}: any): React.ReactElement {
       </View>
 
       {/* Back Button */}
-      <PressableOpacity style={styles.backButton} onPress={()=>{navigation.goBack();}}>
+      <PressableOpacity style={styles.backButton} onPress={()=>{setIsBack(true);}}>
         <IonIcon name="chevron-back" color="white" size={35} />
       </PressableOpacity>
     </View>
