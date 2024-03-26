@@ -1,24 +1,22 @@
 import axios from "axios"
 import { NotFoundError } from "../utils/customizeError";
 import { APIURL } from "../Constants";
+import { itemType } from "../utils/types";
+import FormData from "form-data";
 
 const app = 'inventory';
 
-export const get_item_info_by_code = async (code)=>{
-    try{
-        console.log('APIURL', `${APIURL}${app}/get_item_info_by_code/${code}`)
-        const {data} = await axios.get(`${APIURL}${app}/get_item_info_by_code/${code}`);
-        if(data.status === 'success'){
-            return data.data;
-        }else if(data.status === 'not found'){
-            throw new NotFoundError(data.message);
-        }
-    }catch(err){
-        throw new Error(err)
+export const get_item_info_by_code = async (code: string)=>{
+    console.log('APIURL', `${APIURL}${app}/get_item_info_by_code/${code}`)
+    const {data} = await axios.get(`${APIURL}${app}/get_item_info_by_code/${code}`);
+    if(data.status === 'success'){
+        return data.data;
+    }else if(data.status === 'not found'){
+        throw new NotFoundError(data.message);
     }
 }
 
-export const scrap_info_by_url = async (url)=>{
+export const scrap_info_by_url = async (url: string)=>{
     try{
         console.log('APIURL', `${APIURL}${app}/scrap_info_by_url`);
         const {data} = await axios.get(`${APIURL}${app}/scrap_info_by_url`,{
@@ -36,20 +34,16 @@ export const scrap_info_by_url = async (url)=>{
     }
 }
 
-export const scrap_info_by_num_code = async (code)=>{
-    try{
-        const {data} = await axios.get(`${APIURL}${app}/scrap_info_by_num_code/${code}`);
-        if(data.status === 'success'){
-            return data.data;
-        }else if(data.status === 'not found'){
-            throw new NotFoundError(data.message);
-        }
-    }catch(err){
-        throw new Error(err)
+export const scrap_info_by_num_code = async (code: number | string)=>{
+    const {data} = await axios.get(`${APIURL}${app}/scrap_info_by_num_code/${code}`);
+    if(data.status === 'success'){
+        return data.data;
+    }else if(data.status === 'not found'){
+        throw new NotFoundError(data.message);
     }
 }
 
-export const add_new_item = async (item)=>{
+export const add_new_item = async (item: FormData)=>{
     try{
         const {data} = await axios.post(`${APIURL}${app}/add_new_item`, item, {
             headers: {
@@ -63,7 +57,7 @@ export const add_new_item = async (item)=>{
     }
 }
 
-export const image_upload = async(image)=>{
+export const image_upload = async(image: FormData)=>{
     try{
         const {data} = await axios.post(`${APIURL}${app}/image_upload`, image, {
             headers: {
@@ -91,7 +85,7 @@ export const getCategory = async ()=>{
     return data;
 }
 
-export const get_last_items = async(staff_id, page_number_from_last)=>{
+export const get_last_items = async(staff_id: number, page_number_from_last: number)=>{
     const {data} = await axios.get(`${APIURL}${app}/get_last_items/${staff_id}`, {
         params: {
             page_number_from_last: page_number_from_last
@@ -100,12 +94,8 @@ export const get_last_items = async(staff_id, page_number_from_last)=>{
     return data;
 }
 
-export const delete_item = async(id)=>{
+export const delete_item = async(id: number)=>{
     const {data} = await axios.delete(`${APIURL}${app}/delete_item/${id}`);
     return data;
 }
-
-
-
-
 

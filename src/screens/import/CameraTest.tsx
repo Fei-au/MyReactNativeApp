@@ -1,3 +1,4 @@
+import { useRef } from "react"
 import { StyleSheet } from "react-native"
 import { Camera, useCameraDevice } from "react-native-vision-camera"
 

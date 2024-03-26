@@ -58,7 +58,7 @@ type dashboardPropsType = {
 	refresh?: boolean,
 }
 function Dashboard (props: dashboardPropsType){
-	const userRef = useRef<userType>({});
+	const userRef = useRef<userType>();
 	const pageRef = useRef(1);
 	const {refresh} = props;
 	console.log('refresh', refresh)
@@ -78,6 +78,9 @@ function Dashboard (props: dashboardPropsType){
 				const ur = await AsyncStorage.getItem('user');
 				userRef.current = JSON.parse(ur as string);
 				const pml = [];
+				if(!userRef.current?.staff_id){
+					throw new Error('Staff auth error, please relogin')
+				}
 				pml.push(get_last_items(userRef.current.staff_id, pageRef.current++))
 				pml.push(get_last_items(userRef.current.staff_id, pageRef.current++))
 				const resl = await Promise.all(pml); 
@@ -104,6 +107,9 @@ function Dashboard (props: dashboardPropsType){
 		try{
 			if (isFetching || allDf) return;
 			setIsFetching(true);
+			if(!userRef.current?.staff_id){
+				throw new Error('Staff auth error, please relogin')
+			}
 			const res = await get_last_items(userRef.current.staff_id, pageRef.current++);
 			if(res.length === 0){
 				setAllDataFetched(true);

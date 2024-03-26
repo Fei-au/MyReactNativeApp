@@ -72,11 +72,11 @@ function Login({navigation}: any): React.JSX.Element {
 
 	const handleLogin = async()=>{
 		if(!account){
-			toast.show({description: 'Please enter email address or username.'});
+			toast.show({description: 'Please enter username.'});
 			return;
 		}
-		if(password.length < 6){
-			toast.show({description: 'Password should be at least 6 characters.'});
+		if(!password.length){
+			toast.show({description: 'Password enter password.'});
 			return;
 		}
 		try{
@@ -86,7 +86,8 @@ function Login({navigation}: any): React.JSX.Element {
 				password: password,
 			})
 			setIsLoading(false);
-			AsyncStorage.setItem('user', JSON.stringify(data))
+			const {user_id, staff} = data;
+			AsyncStorage.setItem('user', JSON.stringify({user_id, ...staff}))
 			console.log('data.....', data)
 			navigation.navigate('Home');
 		}catch(err){
@@ -139,7 +140,7 @@ function Login({navigation}: any): React.JSX.Element {
 							<TextInput
 								ref={emailRef}
 								style={{paddingBottom: 0}}
-								placeholder='Email Address / Username'
+								placeholder='Username'
 								onChangeText={setAccount}
 								value={account}
 								autoCapitalize="none"

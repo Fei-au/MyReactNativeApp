@@ -1,8 +1,8 @@
 
 
 export type userType = {
-    user_id?: number,
-    staff_id?: number,
+    user_id: number,
+    staff_id: number,
 }
 
 export type imageType = {
@@ -24,3 +24,9 @@ export interface itemType {
   category_id?: string,
   status?: {id: string, name: string} | {id: number, name: string},
 }
+
+export interface loginType{
+  username: string,
+  password: string,
+}
+

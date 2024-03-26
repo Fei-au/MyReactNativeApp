@@ -31,7 +31,8 @@ import { PhotoFile, VideoFile } from 'react-native-vision-camera';
 import { commonStyles } from '../../styles/styles';
 import { CameraOptions, ImagePickerResponse, launchCamera, OptionsCommon } from 'react-native-image-picker';
 import { errorHandler } from '../../utils/errorHandler';
-import { imageType } from '../../utils/types';
+import { imageType, userType } from '../../utils/types';
+import { get_next_item_number } from '../../services/auth';
 
 
 interface CaseNumParam {
@@ -69,10 +70,6 @@ interface IsManulInputParams {
   price?: boolean,
 }
 
-type userType = {
-  user_id?: number,
-  staff_id?: number,
-}
 
 
 // type Props = NativeStackScreenProps<Routes, 'CodeScannerPage'>
@@ -143,19 +140,25 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
-  const userRef = useRef<userType>({});
+  const userRef = useRef<userType>();
 
   useEffect(()=>{
     const func = async ()=>{
       try{
-        const statuslist = await getStatus();
-        const categlist = await getCategory();
-        console.log('statuslist', statuslist)
-        console.log('categlist', categlist)
-        const storedValue = await AsyncStorage.getItem('case_number');
-        const storedLocation = await AsyncStorage.getItem('location');
-        const ur = await AsyncStorage.getItem('user');
+        const ur = await AsyncStorage.getItem('user')
         userRef.current = JSON.parse(ur as string);
+        const pmList = [
+          getStatus(),
+          getCategory(),
+          get_next_item_number(userRef.current?.staff_id || 0),
+          AsyncStorage.getItem('case_number'),
+          AsyncStorage.getItem('location'),
+        ];
+        const [statuslist, categlist, nextItemNumber, storedValue, storedLocation] = await Promise.all(pmList);
+
+        if(isNew){
+          setItemNumber(nextItemNumber)
+        }
         setCaseNumber(storedValue || '');
         setLocation(storedLocation || '');
         setStatusData(statuslist.map((ele: statusDataType)=> {return {label: ele.status, value: ele.id.toString() }}))
@@ -329,7 +332,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         // layer: layer,
         customize_size: size + '',
         customize_color: color,
-        add_staff: userRef.current.staff_id,
+        add_staff: userRef.current?.staff_id || 0,
         id: itemInfo.id,
       }
       console.log('item', item)
@@ -391,18 +394,6 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
             onChangeText={handleCaseNumberChange}
             value={caseNumber + ''}
           />
-        </View>
-        <View style={styles.inputContainerStyle}>
-          <Text style={styles.labelStyle}>Item Number</Text>
-          <View style={styles.row}>
-            <TextInput
-              style={[styles.inputStyle, styles.inputWithIcon]}
-              keyboardType='numeric'
-              onChangeText={handleItemNumberChange}
-              value={itemNumber + ''}
-            />
-            <Scanner scannerStyle={styles.scannerStyle} setCode={setItemNumber}/>
-          </View>
         </View>
         <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Title<Text style={{color: 'red'}}>*</Text></Text>
@@ -560,8 +551,19 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
             // readOnly={!isManulInput.price}
           />
         </View>
+        <View style={styles.inputContainerStyle}>
+          <Text style={styles.labelStyle}>Item Number</Text>
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.inputStyle, styles.inputWithIcon]}
+              keyboardType='numeric'
+              onChangeText={handleItemNumberChange}
+              value={itemNumber + ''}
+            />
+            <Scanner scannerStyle={styles.scannerStyle} setCode={setItemNumber}/>
+          </View>
+        </View>
         <View style={[styles.inputContainerStyle]}>
-          
           <Text style={styles.labelStyle}>Location<Text style={{color: 'red'}}>*</Text></Text>
           <View style={styles.row}>
             <TextInput
