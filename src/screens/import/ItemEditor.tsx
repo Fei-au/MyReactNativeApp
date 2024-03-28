@@ -33,6 +33,7 @@ import { CameraOptions, ImagePickerResponse, launchCamera, OptionsCommon } from 
 import { errorHandler } from '../../utils/errorHandler';
 import { imageType, userType } from '../../utils/types';
 import { get_next_item_number } from '../../services/auth';
+import MyImagePicker, { imageInPickerType } from '../../components/ImagePicker';
 
 
 interface CaseNumParam {
@@ -119,7 +120,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
   // const [eanCode, setEanCode] = useState(itemInfo.ean_code || '');
   // const [FNSkuCode, setFNSkuCode] = useState(itemInfo.fnsku_code || '');
   const [lpnCode, setLpnCode] = useState(itemInfo.lpn_code || '');
-  const [pics, setPics] = useState<{}[]>(itemInfo.images ? itemInfo.images.map((ele:imageType)=>{return {id: Math.random(), img_id: ele.id, url: ele.full_image_url}}): []); // Item pictures, get from 1. database 2. scraped 3. photos taken
+  const [pics, setPics] = useState<Array<imageInPickerType>>(itemInfo.images ? itemInfo.images.map((ele:imageType)=>{return {id: Math.random(), img_id: ele.id, url: ele.full_image_url}}): []); // Item pictures, get from 1. database 2. scraped 3. photos taken
   
   const [status, setStatus] = useState<string>(isNew ? '' : (itemInfo.status ? itemInfo.status.toString() : ''));
   const [statusData, setStatusData] = useState<SelectDataInterface[]>([]); // Status enum data, get from database
@@ -473,12 +474,17 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
         <View style={styles.inputContainerStyle}>
           <Text style={styles.labelStyle}>Pictures<Text style={{color: 'red'}}>*</Text></Text>
           <View style={{flexWrap: 'wrap', flexDirection: 'row'}}>
-            <ImagePicker
+            <MyImagePicker
+                onChange={setPics}
+                files={pics.map(ele=>{return {...ele, id: Math.random()}})}
+                onAddImageClick={onAddImageClick}
+            />
+            {/* <ImagePicker
               onChange={setPics}
               files={pics.map(ele=>{return {...ele, id: Math.random()}})}
               selectable={true}
               onAddImageClick={onAddImageClick}
-            />
+            /> */}
           </View>
         </View>
         <View style={styles.inputContainerStyle}>
