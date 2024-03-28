@@ -219,7 +219,7 @@ function ItemEditor({route, navigation}: any): React.JSX.Element {
     // react-native-image-picker
     const options: CameraOptions = {
       mediaType: 'photo',
-      quality: 0.5
+      quality: 0.3
     };
     launchCamera(options, (response: ImagePickerResponse) => {
       if (response.didCancel) {
